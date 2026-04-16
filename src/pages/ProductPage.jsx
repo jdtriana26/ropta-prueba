@@ -9,6 +9,7 @@ import {
 import toast from 'react-hot-toast'
 import { supabase } from '../lib/supabase'
 import { useCartStore } from '../store/useCartStore'
+import ReviewSection from '../components/product/ReviewSection'
 
 // ── Galería de imágenes ───────────────────────────────────────────────────────
 function ImageGallery({ images, productName }) {
@@ -506,6 +507,7 @@ export default function ProductPage() {
                     </div>
                 </section>
             )}
+            <ReviewSection productId={product.id} />
         </div>
     )
 }

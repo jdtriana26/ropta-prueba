@@ -5,6 +5,7 @@ import { useAuthStore } from '../../store/useAuthStore'
 import { useCartStore } from '../../store/useCartStore'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabase'
+import SearchBar from './SearchBar'
 
 // Logo Multi Flash en SVG (reemplaza con <img src="/logo.png" /> cuando tengas el archivo en /public)
 function MultiFlashLogo({ className = '' }) {
@@ -105,7 +106,7 @@ export default function Header() {
 
                     {/* Acciones */}
                     <div className="flex items-center gap-2">
-
+                        <SearchBar />
                         {/* Carrito */}
                         <Link
                             to="/carrito"

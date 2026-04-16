@@ -4,6 +4,8 @@ import { Link, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { SlidersHorizontal, X, ChevronDown } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { useSearchParams } from 'react-router-dom'
+
 
 const SORT_OPTIONS = [
     { value: 'newest',     label: 'Más recientes' },
@@ -90,6 +92,9 @@ export default function CatalogPage() {
     const [priceMax,    setPriceMax]    = useState(500)
     const [sortOpen,    setSortOpen]    = useState(false)
 
+    const [searchParams] = useSearchParams()
+    const searchQuery = searchParams.get('q') ?? ''
+
     const { data: categories = [] } = useQuery({
         queryKey: ['categories'],
         queryFn: async () => {
@@ -99,6 +104,9 @@ export default function CatalogPage() {
                 .eq('is_active', true)
                 .order('name')
             return data
+            if (searchQuery) {
+                q = q.ilike('name', `%${searchQuery}%`)
+            }
         },
     })
 
@@ -163,7 +171,10 @@ export default function CatalogPage() {
             <div className="flex items-end justify-between mb-6">
                 <div>
                     <h1 className="font-display text-3xl font-extrabold text-gray-900">
-                        {currentCat?.name ?? 'Todos los productos'}
+                        {searchQuery
+                            ? `Resultados para "${searchQuery}"`
+                            : currentCat?.name ?? 'Todos los productos'
+                        }
                     </h1>
                     <p className="text-gray-400 text-sm mt-1">
                         {isLoading ? '...' : `${filtered.length} producto${filtered.length !== 1 ? 's' : ''}`}
