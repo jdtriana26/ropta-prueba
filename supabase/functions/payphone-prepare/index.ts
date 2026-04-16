@@ -86,6 +86,8 @@ Deno.serve(async (req) => {
             method: 'POST',
             headers: {
                 'Content-Type':  'application/json',
+                'Accept':        'application/json',
+                'User-Agent':    'MultiFlash/1.0',
                 'Authorization': `Bearer ${Deno.env.get('PAYPHONE_TOKEN')}`,
             },
             body: JSON.stringify(payphoneBody),
