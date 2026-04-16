@@ -45,6 +45,6 @@ export const useCartStore = create(
             getItemCount: () =>
                 get().items.reduce((sum, i) => sum + i.quantity, 0),
         }),
-        { name: 'vybe-cart' }
+        { name: 'multiflash-cart' }
     )
 )

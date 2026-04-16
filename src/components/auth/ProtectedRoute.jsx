@@ -1,9 +1,10 @@
 // src/components/auth/ProtectedRoute.jsx
-import { Navigate, Outlet } from 'react-router-dom'
+import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../store/useAuthStore'
 
 export default function ProtectedRoute({ adminOnly = false }) {
-    const { user, loading } = useAuthStore()
+    const { user, profile, loading } = useAuthStore()
+    const location = useLocation()
 
     if (loading) return (
         <div className="min-h-screen flex items-center justify-center">
@@ -11,7 +12,13 @@ export default function ProtectedRoute({ adminOnly = false }) {
         </div>
     )
 
-    if (!user) return <Navigate to="/login" replace />
+    if (!user) {
+        return <Navigate to="/login" state={{ from: location.pathname }} replace />
+    }
+
+    if (adminOnly && profile?.role !== 'admin') {
+        return <Navigate to="/" replace />
+    }
 
     return <Outlet />
 }

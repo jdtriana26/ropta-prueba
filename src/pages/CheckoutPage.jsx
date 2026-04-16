@@ -11,6 +11,7 @@ import { supabase } from '../lib/supabase'
 import { createTransaction } from '../lib/payphone'
 import { useCartStore } from '../store/useCartStore'
 import { useAuthStore } from '../store/useAuthStore'
+import { supabase } from './supabase'
 
 const SHIPPING_THRESHOLD = 50
 const SHIPPING_COST      = 5.99
@@ -118,6 +119,24 @@ function OrderSummary({ items, subtotal, shipping, total, collapsed, onToggle })
             </div>
         </div>
     )
+}
+
+export async function createTransaction({ kind, id, returnPath }) {
+    const { data, error } = await supabase.functions.invoke('payphone-prepare', {
+        body: { kind, id, returnPath },
+    })
+    if (error) throw new Error(error.message)
+    if (data?.error) throw new Error(data.error)
+    return data   // { payWithCard }
+}
+
+export async function confirmTransaction({ id, clientTxId, kind }) {
+    const { data, error } = await supabase.functions.invoke('payphone-confirm', {
+        body: { id, clientTxId, kind },
+    })
+    if (error) throw new Error(error.message)
+    if (data?.error) throw new Error(data.error)
+    return data   // { approved, status }
 }
 
 // ── Página principal ──────────────────────────────────────────────────────────
@@ -260,9 +279,9 @@ export default function CheckoutPage() {
             sessionStorage.setItem('pendingCartItems', JSON.stringify(items))
 
             const txData = await createTransaction({
-                amount:     total,
-                orderId:    order.id,
-                clientTxId: order.id,  // usamos el order ID como clientTransactionId
+                kind:       'order',
+                id:         newOrder.id,
+                returnPath: `${window.location.origin}/pago/resultado`,
             })
 
             if (!txData.payWithCard) throw new Error('No se obtuvo URL de pago')

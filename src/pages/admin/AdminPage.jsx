@@ -1,19 +1,19 @@
 // src/pages/admin/AdminPage.jsx
 import { NavLink, Routes, Route, Navigate } from 'react-router-dom'
-import {
-  LayoutDashboard, ShoppingBag, Tag, Package, LogOut, ChevronRight
-} from 'lucide-react'
+import { LayoutDashboard, ShoppingBag, Tag, Package, Users, LogOut, ChevronRight } from 'lucide-react'
 import { useAuthStore } from '../../store/useAuthStore'
 import AdminDashboard  from './AdminDashboard'
 import AdminProducts   from './AdminProducts'
 import AdminCategories from './AdminCategories'
 import AdminOrders     from './AdminOrders'
+import AdminUsers from './AdminUsers'
 
 const NAV = [
   { to: '/admin',            label: 'Dashboard',   icon: LayoutDashboard, end: true },
   { to: '/admin/productos',  label: 'Productos',   icon: ShoppingBag },
   { to: '/admin/categorias', label: 'Categorías',  icon: Tag },
   { to: '/admin/pedidos',    label: 'Pedidos',     icon: Package },
+  { to: '/admin/usuarios',   label: 'Usuarios',   icon: Users },
 ]
 
 export default function AdminPage() {
@@ -72,6 +72,7 @@ export default function AdminPage() {
             <Route path="categorias" element={<AdminCategories />} />
             <Route path="pedidos"    element={<AdminOrders />} />
             <Route path="*"          element={<Navigate to="/admin" replace />} />
+            <Route path="usuarios" element={<AdminUsers />} />
           </Routes>
         </main>
       </div>
