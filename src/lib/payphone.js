@@ -29,7 +29,7 @@ export async function createTransaction({ amount, orderId, clientTxId }) {
             clientTransactionId: clientTxId,
             responseUrl:         `${window.location.origin}/pago/resultado`,
             cancellationUrl:     `${window.location.origin}/pago/cancelado`,
-            reference:           `Orden VYBE #${orderId.slice(0, 8).toUpperCase()}`,
+            reference:           `Multi Flash #${orderId.slice(0, 8).toUpperCase()}`,
         }),
     })
 

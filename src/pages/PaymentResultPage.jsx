@@ -158,7 +158,7 @@ export default function PaymentResultPage() {
             </h1>
             <p className="text-gray-500 mb-2">
                 {type === 'membership'
-                    ? 'Tu membresía VYBE Premium está activa. Ya puedes generar tu cupón del mes.'
+                    ? '¡Compra realizada con éxito! Tu pedido está siendo procesado.'
                     : 'Tu pedido ha sido confirmado y está siendo procesado.'
                 }
             </p>
@@ -168,7 +168,7 @@ export default function PaymentResultPage() {
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 {type === 'membership' ? (
                     <>
-                        <Link to="/membresia" className="btn-primary flex items-center justify-center gap-2">
+                        <Link to="/catalogo" className="btn-primary flex items-center justify-center gap-2">
                             Ver mi membresía
                         </Link>
                         <Link to="/catalogo" className="btn-outline flex items-center justify-center gap-2">

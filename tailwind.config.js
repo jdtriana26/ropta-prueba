@@ -8,39 +8,39 @@ export default {
     extend: {
       colors: {
         brand: {
-          50:  '#f0faf4',
-          100: '#d6f0e0',
-          200: '#a8dfc0',
-          300: '#6cc99a',
-          400: '#2d9e68',   // ← color principal
-          500: '#1f7d50',   // ← hover
-          600: '#166040',
-          700: '#0f4730',
-          800: '#093021',
-          900: '#041a12',
+          50:  '#EEF2FF',
+          100: '#C7D2FE',
+          200: '#A5B4FC',
+          300: '#6B8DE8',
+          400: '#1A3A8F',
+          500: '#152E72',
+          600: '#0F2258',
+          700: '#0A173D',
+          800: '#050D22',
+          900: '#020610',
         },
         accent: {
-          400: '#ffb340',   // amarillo vibrante
-          500: '#f59e0b',
+          50:  '#FFF0F0',
+          100: '#FFD6D6',
+          400: '#E31E24',
+          500: '#B31A1F',
+        },
+        highlight: {
+          400: '#FFCC00',
+          500: '#E6B800',
         }
       },
       fontFamily: {
         display: ['"Syne"', 'sans-serif'],
-        body: ['"Plus Jakarta Sans"', 'sans-serif'],
+        body:    ['"Plus Jakarta Sans"', 'sans-serif'],
       },
       animation: {
-        'fade-in': 'fadeIn 0.4s ease-out',
+        'fade-in':  'fadeIn 0.4s ease-out',
         'slide-up': 'slideUp 0.4s ease-out',
       },
       keyframes: {
-        fadeIn: {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' },
-        },
-        slideUp: {
-          '0%': { opacity: '0', transform: 'translateY(16px)' },
-          '100%': { opacity: '1', transform: 'translateY(0)' },
-        },
+        fadeIn:  { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+        slideUp: { '0%': { opacity: '0', transform: 'translateY(16px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
       },
     },
   },

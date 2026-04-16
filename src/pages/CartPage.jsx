@@ -31,7 +31,7 @@ export default function CartPage() {
     const progressToFree = Math.min((subtotal / SHIPPING_THRESHOLD) * 100, 100)
 
     const handleCoupon = () => {
-        if (coupon.trim().toUpperCase() === 'VYBE10') {
+        if (coupon.trim().toUpperCase() === 'FLASH10') {
             setCouponApplied(true)
             setCouponError('')
             toast.success('Cupón aplicado — 10% de descuento ✓')
@@ -96,7 +96,7 @@ export default function CartPage() {
             <span className="text-brand-700 font-medium">
               Te faltan <strong>${(SHIPPING_THRESHOLD - subtotal).toFixed(2)}</strong> para envío gratis
             </span>
-                        <span className="text-brand-500 font-semibold">${SHIPPING_THRESHOLD}</span>
+                        <span className="text-brand-400 font-semibold">${SHIPPING_THRESHOLD}</span>
                     </div>
                     <div className="w-full bg-brand-200 rounded-full h-2">
                         <div
@@ -108,7 +108,7 @@ export default function CartPage() {
             )}
 
             {freeShipping && (
-                <div className="bg-green-50 text-green-700 rounded-2xl px-5 py-3 mb-6 text-sm font-medium flex items-center gap-2">
+                <div className="bg-brand-50 text-brand-400 rounded-2xl px-5 py-3 mb-6 text-sm font-medium flex items-center gap-2">
                     🎉 ¡Tienes envío gratis!
                 </div>
             )}
@@ -133,7 +133,7 @@ export default function CartPage() {
                                         />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center text-3xl text-gray-200">
-                                            👗
+                                            📦
                                         </div>
                                     )}
                                 </div>
@@ -144,7 +144,7 @@ export default function CartPage() {
                                 <div>
                                     <Link
                                         to={`/producto/${item.slug}`}
-                                        className="font-display font-semibold text-gray-900 hover:text-brand-500 transition-colors line-clamp-1"
+                                        className="font-display font-semibold text-gray-900 hover:text-brand-400 transition-colors line-clamp-1"
                                     >
                                         {item.productName}
                                     </Link>
@@ -184,7 +184,7 @@ export default function CartPage() {
 
                                     {/* Precio + eliminar */}
                                     <div className="flex items-center gap-3">
-                    <span className="font-display font-bold text-brand-500">
+                    <span className="font-display font-bold text-brand-400">
                       ${(item.price * item.quantity).toFixed(2)}
                     </span>
                                         <button
@@ -205,7 +205,7 @@ export default function CartPage() {
                     {/* Seguir comprando */}
                     <Link
                         to="/catalogo"
-                        className="flex items-center gap-2 text-sm text-brand-500 hover:text-brand-600 font-medium pt-2"
+                        className="flex items-center gap-2 text-sm text-brand-400 hover:text-brand-400 font-medium pt-2"
                     >
                         ← Seguir comprando
                     </Link>
@@ -233,14 +233,14 @@ export default function CartPage() {
                             {couponApplied && (
                                 <div className="flex justify-between text-green-600">
                   <span className="flex items-center gap-1">
-                    <Tag size={12} /> Cupón VYBE10
+                    <Tag size={12} /> Cupón FLASH10
                   </span>
                                     <span className="font-medium">-${discount.toFixed(2)}</span>
                                 </div>
                             )}
                             <div className="border-t border-gray-100 pt-3 flex justify-between">
                                 <span className="font-display font-bold text-gray-900">Total</span>
-                                <span className="font-display font-extrabold text-brand-500 text-xl">
+                                <span className="font-display font-extrabold text-brand-400 text-xl">
                   ${total.toFixed(2)}
                 </span>
                             </div>
@@ -254,7 +254,7 @@ export default function CartPage() {
                             <div className="flex gap-2">
                                 <input
                                     className="input text-sm py-2 flex-1"
-                                    placeholder="VYBE10"
+                                    placeholder="FLASH10"
                                     value={coupon}
                                     onChange={e => { setCoupon(e.target.value); setCouponError('') }}
                                     onKeyDown={e => e.key === 'Enter' && handleCoupon()}

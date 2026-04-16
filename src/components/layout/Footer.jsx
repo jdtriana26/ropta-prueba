@@ -1,7 +1,7 @@
 // src/components/layout/Footer.jsx
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Instagram, Twitter, Facebook, X, ChevronDown, ChevronUp, Send, Loader2 } from 'lucide-react'
+import { Instagram, Facebook, X, ChevronDown, ChevronUp, Send, Loader2, BadgeCheck, MapPin, Phone } from 'lucide-react'
 
 // ── Modal base ────────────────────────────────────────────────────────────────
 function Modal({ title, onClose, children }) {
@@ -22,92 +22,102 @@ function Modal({ title, onClose, children }) {
     )
 }
 
-// ── Guía de tallas ────────────────────────────────────────────────────────────
-function SizeGuideModal({ onClose }) {
-    const [open, setOpen] = useState('tops')
+// ── Garantía ──────────────────────────────────────────────────────────────────
+function WarrantyModal({ onClose }) {
+    const [open, setOpen] = useState(null)
+    const toggle = (key) => setOpen(prev => prev === key ? null : key)
 
-    const TABLES = {
-        tops: {
-            label: 'Camisetas y Chaquetas',
-            headers: ['Talla', 'Pecho (cm)', 'Cintura (cm)', 'Cadera (cm)'],
-            rows: [
-                ['XS', '80-84', '62-66', '86-90'],
-                ['S',  '85-89', '67-71', '91-95'],
-                ['M',  '90-94', '72-76', '96-100'],
-                ['L',  '95-99', '77-81', '101-105'],
-                ['XL', '100-104', '82-86', '106-110'],
-                ['XXL','105-109', '87-91', '111-115'],
-            ]
+    const SECTIONS = [
+        {
+            key: 'coverage',
+            title: '🛡️ ¿Qué cubre la garantía?',
+            content: (
+                <div className="text-sm text-gray-600 space-y-3">
+                    <p>Todos los productos Multi Flash cuentan con <strong>6 meses de garantía</strong> contra defectos de fábrica a partir de la fecha de compra.</p>
+                    <div>
+                        <p className="font-semibold text-gray-800 mb-2">La garantía cubre:</p>
+                        <ul className="space-y-1 text-gray-500">
+                            <li>✅ Defectos de fabricación o materiales</li>
+                            <li>✅ Fallas eléctricas o mecánicas sin uso indebido</li>
+                            <li>✅ Piezas defectuosas de origen</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <p className="font-semibold text-gray-800 mb-2">La garantía NO cubre:</p>
+                        <ul className="space-y-1 text-gray-500">
+                            <li>❌ Daños por mal uso o accidentes</li>
+                            <li>❌ Desgaste natural del producto</li>
+                            <li>❌ Daños por caídas o golpes</li>
+                            <li>❌ Reparaciones no autorizadas</li>
+                        </ul>
+                    </div>
+                </div>
+            )
         },
-        bottoms: {
-            label: 'Pantalones',
-            headers: ['Talla', 'Cintura (cm)', 'Cadera (cm)', 'Largo (cm)'],
-            rows: [
-                ['XS', '62-66', '86-90',   '98'],
-                ['S',  '67-71', '91-95',   '99'],
-                ['M',  '72-76', '96-100',  '100'],
-                ['L',  '77-81', '101-105', '101'],
-                ['XL', '82-86', '106-110', '102'],
-                ['XXL','87-91', '111-115', '103'],
-            ]
+        {
+            key: 'process',
+            title: '📋 ¿Cómo hacer válida la garantía?',
+            content: (
+                <div className="text-sm text-gray-600 space-y-2">
+                    <ol className="space-y-2 list-decimal list-inside">
+                        <li>Contáctanos por email a <strong>multireflash2026@gmail.com</strong> con tu número de pedido</li>
+                        <li>Describe el problema y adjunta fotos o video del defecto</li>
+                        <li>Nuestro equipo evaluará el caso en 24–48 horas hábiles</li>
+                        <li>Si aplica, te enviaremos las instrucciones para la devolución</li>
+                        <li>Recibido el producto, lo reemplazamos o reembolsamos en 5 días hábiles</li>
+                    </ol>
+                </div>
+            )
         },
-    }
+        {
+            key: 'zones',
+            title: '📍 Zonas de cobertura',
+            content: (
+                <div className="text-sm text-gray-600 space-y-2">
+                    <p>Ofrecemos servicio de garantía en nuestras zonas de operación:</p>
+                    <div className="grid grid-cols-3 gap-3 mt-3">
+                        {['Quito', 'Guayaquil', 'El Quinche'].map(city => (
+                            <div key={city} className="bg-brand-50 rounded-xl p-3 text-center">
+                                <MapPin size={18} className="text-brand-400 mx-auto mb-1" />
+                                <p className="text-sm font-semibold text-brand-700">{city}</p>
+                            </div>
+                        ))}
+                    </div>
+                    <p className="text-xs text-gray-400 mt-3">
+                        Para otras zonas, coordinaremos el retiro del producto a través de courier con costo compartido.
+                    </p>
+                </div>
+            )
+        },
+    ]
 
     return (
-        <Modal title="Guía de tallas" onClose={onClose}>
-            {/* Cómo medir */}
-            <div className="bg-brand-50 rounded-xl p-4 mb-5">
-                <h3 className="font-display font-bold text-brand-700 mb-2 text-sm">¿Cómo tomar tus medidas?</h3>
-                <ul className="text-sm text-brand-600 space-y-1.5">
-                    <li>📏 <strong>Pecho:</strong> Mide la parte más ancha de tu pecho, pasando la cinta por las axilas.</li>
-                    <li>📏 <strong>Cintura:</strong> Mide la parte más estrecha de tu cintura, generalmente sobre el ombligo.</li>
-                    <li>📏 <strong>Cadera:</strong> Mide la parte más ancha de tus caderas.</li>
-                </ul>
+        <Modal title="Garantía — 6 meses" onClose={onClose}>
+            <div className="bg-brand-50 border border-brand-100 rounded-xl p-4 mb-6 flex items-start gap-3">
+                <BadgeCheck size={24} className="text-brand-400 flex-shrink-0 mt-0.5" />
+                <div>
+                    <p className="font-semibold text-brand-800 text-sm">Todos los productos incluyen 6 meses de garantía</p>
+                    <p className="text-brand-600 text-xs mt-0.5">Válida desde la fecha de compra, contra defectos de fábrica.</p>
+                </div>
             </div>
-
-            {/* Tabs */}
-            <div className="flex gap-2 mb-4 flex-wrap">
-                {Object.entries(TABLES).map(([key, { label }]) => (
-                    <button
-                        key={key}
-                        onClick={() => setOpen(key)}
-                        className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                            open === key
-                                ? 'bg-brand-400 text-white'
-                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                        }`}
-                    >
-                        {label}
-                    </button>
+            <div className="space-y-2">
+                {SECTIONS.map(({ key, title, content }) => (
+                    <div key={key} className="border border-gray-100 rounded-xl overflow-hidden">
+                        <button
+                            onClick={() => toggle(key)}
+                            className="w-full flex items-center justify-between px-4 py-3.5 text-left hover:bg-gray-50 transition-colors"
+                        >
+                            <span className="font-display font-semibold text-gray-800">{title}</span>
+                            {open === key ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
+                        </button>
+                        {open === key && (
+                            <div className="px-4 pb-4 animate-fade-in border-t border-gray-50 pt-3">
+                                {content}
+                            </div>
+                        )}
+                    </div>
                 ))}
             </div>
-
-            {/* Tabla */}
-            <div className="overflow-x-auto rounded-xl border border-gray-100">
-                <table className="w-full text-sm">
-                    <thead className="bg-gray-50">
-                    <tr>
-                        {TABLES[open].headers.map(h => (
-                            <th key={h} className="px-4 py-3 text-left text-gray-500 font-medium">{h}</th>
-                        ))}
-                    </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50">
-                    {TABLES[open].rows.map(([size, ...vals]) => (
-                        <tr key={size} className="hover:bg-gray-50">
-                            <td className="px-4 py-3 font-display font-bold text-brand-500">{size}</td>
-                            {vals.map((v, i) => (
-                                <td key={i} className="px-4 py-3 text-gray-600">{v}</td>
-                            ))}
-                        </tr>
-                    ))}
-                    </tbody>
-                </table>
-            </div>
-
-            <p className="text-xs text-gray-400 mt-4">
-                * Las medidas pueden variar ±2 cm según el diseño del producto. En caso de duda, recomendamos elegir la talla mayor.
-            </p>
         </Modal>
     )
 }
@@ -115,7 +125,6 @@ function SizeGuideModal({ onClose }) {
 // ── Envíos y devoluciones ─────────────────────────────────────────────────────
 function ShippingModal({ onClose }) {
     const [openSection, setOpenSection] = useState(null)
-
     const toggle = (key) => setOpenSection(prev => prev === key ? null : key)
 
     const SECTIONS = [
@@ -126,19 +135,19 @@ function ShippingModal({ onClose }) {
                 <div className="space-y-3 text-sm text-gray-600">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {[
-                            { type: 'Envío estándar', time: '3-5 días hábiles', price: '$4.99' },
-                            { type: 'Envío express',  time: '2-3 días hábiles', price: '$9.99' },
-                            { type: 'Envío gratis',   time: '3-5 días hábiles', price: 'En compras +$50' },
+                            { type: 'Envío estándar', time: '3–5 días hábiles', price: '$4.99' },
+                            { type: 'Envío express',  time: '1–2 días hábiles', price: '$9.99' },
+                            { type: 'Envío gratis',   time: '3–5 días hábiles', price: 'En compras +$50' },
                         ].map(item => (
                             <div key={item.type} className="bg-gray-50 rounded-xl p-3">
                                 <p className="font-semibold text-gray-800">{item.type}</p>
                                 <p className="text-gray-500 text-xs mt-0.5">{item.time}</p>
-                                <p className="text-brand-500 font-medium mt-1">{item.price}</p>
+                                <p className="text-brand-400 font-medium mt-1">{item.price}</p>
                             </div>
                         ))}
                     </div>
-                    <p className="text-gray-500 text-xs pt-2">
-                        Los tiempos de entrega aplican para envíos dentro de Ecuador. Para envíos internacionales contáctanos.
+                    <p className="text-gray-400 text-xs pt-1">
+                        Entrega en : Quito, Guayaquil y El Quinche. Para otras ciudades se realizara envio normal.
                     </p>
                 </div>
             )
@@ -149,8 +158,8 @@ function ShippingModal({ onClose }) {
             content: (
                 <div className="text-sm text-gray-600 space-y-2">
                     <p>Una vez confirmado tu pedido recibirás un email con el número de seguimiento.</p>
-                    <p>Puedes revisar el estado de tu pedido en cualquier momento desde <strong>Mis pedidos</strong> en tu cuenta.</p>
-                    <p>Los estados son: <span className="text-yellow-600 font-medium">Pendiente</span> → <span className="text-blue-600 font-medium">Confirmado</span> → <span className="text-purple-600 font-medium">Procesando</span> → <span className="text-indigo-600 font-medium">Enviado</span> → <span className="text-green-600 font-medium">Entregado</span></p>
+                    <p>Revisa el estado en cualquier momento desde <strong>Mis pedidos</strong> en tu cuenta.</p>
+                    <p>Estados: <span className="text-yellow-600 font-medium">Pendiente</span> → <span className="text-blue-600 font-medium">Confirmado</span> → <span className="text-purple-600 font-medium">Procesando</span> → <span className="text-indigo-600 font-medium">Enviado</span> → <span className="text-green-600 font-medium">Entregado</span></p>
                 </div>
             )
         },
@@ -161,32 +170,21 @@ function ShippingModal({ onClose }) {
                 <div className="text-sm text-gray-600 space-y-3">
                     <p>Aceptamos devoluciones hasta <strong>30 días</strong> después de la fecha de entrega.</p>
                     <div>
-                        <p className="font-semibold text-gray-800 mb-1">Para que aplique la devolución:</p>
+                        <p className="font-semibold text-gray-800 mb-1">Condiciones:</p>
                         <ul className="space-y-1 text-gray-500">
-                            <li>✓ El producto debe estar sin usar y con etiquetas originales</li>
-                            <li>✓ Debe estar en su empaque original</li>
-                            <li>✓ No aplica para productos en liquidación</li>
+                            <li>✓ Producto sin usar y en su empaque original</li>
+                            <li>✓ Con todos los accesorios incluidos</li>
+                            <li>✗ No aplica para productos en liquidación</li>
                         </ul>
                     </div>
                     <div>
-                        <p className="font-semibold text-gray-800 mb-1">Proceso de devolución:</p>
+                        <p className="font-semibold text-gray-800 mb-1">Proceso:</p>
                         <ol className="space-y-1 text-gray-500 list-decimal list-inside">
-                            <li>Contáctanos por email indicando tu número de pedido</li>
-                            <li>Te enviaremos las instrucciones de envío</li>
-                            <li>Una vez recibido el producto, procesamos el reembolso en 3-5 días hábiles</li>
+                            <li>Escríbenos a multireflash2026@gmail.com con tu número de pedido</li>
+                            <li>Te enviamos instrucciones de devolución</li>
+                            <li>Recibido el producto, reembolsamos en 3–5 días hábiles</li>
                         </ol>
                     </div>
-                </div>
-            )
-        },
-        {
-            key: 'exchanges',
-            title: '🔄 Cambios de talla',
-            content: (
-                <div className="text-sm text-gray-600 space-y-2">
-                    <p>Puedes solicitar un cambio de talla dentro de los primeros <strong>15 días</strong> después de recibir tu pedido.</p>
-                    <p>El cambio está sujeto a disponibilidad de stock. Si la talla no está disponible, procesamos un reembolso completo.</p>
-                    <p>El costo del envío de cambio es cubierto por VYBE en tu primera solicitud.</p>
                 </div>
             )
         },
@@ -202,10 +200,7 @@ function ShippingModal({ onClose }) {
                             className="w-full flex items-center justify-between px-4 py-3.5 text-left hover:bg-gray-50 transition-colors"
                         >
                             <span className="font-display font-semibold text-gray-800">{title}</span>
-                            {openSection === key
-                                ? <ChevronUp size={16} className="text-gray-400" />
-                                : <ChevronDown size={16} className="text-gray-400" />
-                            }
+                            {openSection === key ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
                         </button>
                         {openSection === key && (
                             <div className="px-4 pb-4 animate-fade-in border-t border-gray-50 pt-3">
@@ -228,8 +223,8 @@ function ContactModal({ onClose }) {
     const SUBJECTS = [
         'Consulta sobre un pedido',
         'Problema con un producto',
+        'Garantía',
         'Cambio o devolución',
-        'Consulta sobre tallas',
         'Otro',
     ]
 
@@ -237,7 +232,6 @@ function ContactModal({ onClose }) {
         e.preventDefault()
         if (!form.name || !form.email || !form.message) return
         setSending(true)
-        // Simular envío — aquí puedes conectar con EmailJS, Resend, etc.
         await new Promise(r => setTimeout(r, 1500))
         setSending(false)
         setSent(true)
@@ -250,9 +244,7 @@ function ContactModal({ onClose }) {
                     <Send size={28} className="text-brand-400" />
                 </div>
                 <h3 className="font-display text-xl font-bold text-gray-900 mb-2">¡Mensaje enviado!</h3>
-                <p className="text-gray-400 text-sm">
-                    Nos pondremos en contacto contigo en un plazo de 24-48 horas hábiles.
-                </p>
+                <p className="text-gray-400 text-sm">Te responderemos en un plazo de 24–48 horas hábiles.</p>
                 <button onClick={onClose} className="btn-primary mt-6">Cerrar</button>
             </div>
         </Modal>
@@ -260,73 +252,46 @@ function ContactModal({ onClose }) {
 
     return (
         <Modal title="Contáctanos" onClose={onClose}>
-            {/* Info de contacto */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
                 {[
-                    { icon: '📧', label: 'Email', value: 'hola@vybe.ec' },
-                    { icon: '📱', label: 'WhatsApp', value: '+593 99 999 9999' },
-                    { icon: '🕐', label: 'Horario', value: 'Lun–Vie 9:00–18:00' },
+                    { icon: '📧', label: 'Email',   value: 'multireflash2026@gmail.com' },
+                    { icon: '📱', label: 'WhatsApp', value: '------' },
+                    { icon: '🕐', label: 'Horario',  value: 'Lun–Sáb 9:00–18:00' },
                 ].map(item => (
                     <div key={item.label} className="bg-gray-50 rounded-xl p-3 text-center">
                         <div className="text-2xl mb-1">{item.icon}</div>
                         <p className="text-xs text-gray-400">{item.label}</p>
-                        <p className="text-sm font-medium text-gray-700 mt-0.5">{item.value}</p>
+                        <p className="text-sm font-medium text-gray-700 mt-0.5 break-all">{item.value}</p>
                     </div>
                 ))}
             </div>
 
-            {/* Formulario */}
             <form onSubmit={handleSend} className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
-                        <input
-                            className="input"
-                            placeholder="Juan Pérez"
-                            value={form.name}
-                            onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                            required
-                        />
+                        <input className="input" placeholder="Juan Pérez" value={form.name}
+                               onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-                        <input
-                            type="email"
-                            className="input"
-                            placeholder="tu@email.com"
-                            value={form.email}
-                            onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                            required
-                        />
+                        <input type="email" className="input" placeholder="tu@email.com" value={form.email}
+                               onChange={e => setForm(f => ({ ...f, email: e.target.value }))} required />
                     </div>
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Asunto</label>
-                    <select
-                        className="input"
-                        value={form.subject}
-                        onChange={e => setForm(f => ({ ...f, subject: e.target.value }))}
-                    >
+                    <select className="input" value={form.subject} onChange={e => setForm(f => ({ ...f, subject: e.target.value }))}>
                         <option value="">Selecciona un asunto</option>
                         {SUBJECTS.map(s => <option key={s}>{s}</option>)}
                     </select>
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Mensaje *</label>
-                    <textarea
-                        rows={4}
-                        className="input resize-none"
-                        placeholder="¿En qué podemos ayudarte?"
-                        value={form.message}
-                        onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
-                        required
-                    />
+                    <textarea rows={4} className="input resize-none" placeholder="¿En qué podemos ayudarte?"
+                              value={form.message} onChange={e => setForm(f => ({ ...f, message: e.target.value }))} required />
                 </div>
-                <button
-                    type="submit"
-                    disabled={sending}
-                    className="btn-primary w-full flex items-center justify-center gap-2"
-                >
+                <button type="submit" disabled={sending} className="btn-primary w-full flex items-center justify-center gap-2">
                     {sending
                         ? <><Loader2 size={16} className="animate-spin" /> Enviando...</>
                         : <><Send size={16} /> Enviar mensaje</>
@@ -339,7 +304,7 @@ function ContactModal({ onClose }) {
 
 // ── Footer principal ──────────────────────────────────────────────────────────
 export default function Footer() {
-    const [modal, setModal] = useState(null) // null | 'sizes' | 'shipping' | 'contact'
+    const [modal, setModal] = useState(null)
 
     return (
         <>
@@ -349,16 +314,21 @@ export default function Footer() {
 
                         {/* Marca */}
                         <div className="md:col-span-1">
-                            <span className="font-display text-3xl font-extrabold text-brand-400">VYBE</span>
+                            <div className="font-display text-2xl font-extrabold">
+                                <span className="text-white">MULTI</span>
+                                <span className="text-accent-400"> FLASH</span>
+                            </div>
                             <p className="mt-3 text-sm text-gray-400 leading-relaxed">
-                                Moda que habla por ti. Colecciones únicas para expresar tu estilo sin límites.
+                                Artículos para el hogar y cuidado personal con envío rápido a Quito, Guayaquil y El Quinche.
                             </p>
+                            {/* Garantía badge */}
+                            <div className="mt-4 flex items-center gap-2 bg-brand-400/10 border border-brand-400/20 rounded-xl px-3 py-2">
+                                <BadgeCheck size={16} className="text-highlight-400 flex-shrink-0" />
+                                <span className="text-xs text-gray-300">6 meses de garantía en todos los productos</span>
+                            </div>
                             <div className="flex gap-3 mt-4">
                                 <a href="#" className="p-2 bg-gray-800 rounded-full hover:bg-brand-400 hover:text-white transition-colors">
                                     <Instagram size={16} />
-                                </a>
-                                <a href="#" className="p-2 bg-gray-800 rounded-full hover:bg-brand-400 hover:text-white transition-colors">
-                                    <Twitter size={16} />
                                 </a>
                                 <a href="#" className="p-2 bg-gray-800 rounded-full hover:bg-brand-400 hover:text-white transition-colors">
                                     <Facebook size={16} />
@@ -371,28 +341,27 @@ export default function Footer() {
                             <h4 className="font-display font-semibold text-white mb-4">Ayuda</h4>
                             <ul className="space-y-2 text-sm">
                                 <li>
-                                    <button
-                                        onClick={() => setModal('sizes')}
-                                        className="hover:text-brand-400 transition-colors text-left"
-                                    >
-                                        Guía de tallas
+                                    <button onClick={() => setModal('warranty')}
+                                            className="hover:text-highlight-400 transition-colors text-left flex items-center gap-1.5">
+                                        <BadgeCheck size={13} /> Garantía 6 meses
                                     </button>
                                 </li>
                                 <li>
-                                    <button
-                                        onClick={() => setModal('shipping')}
-                                        className="hover:text-brand-400 transition-colors text-left"
-                                    >
+                                    <button onClick={() => setModal('shipping')}
+                                            className="hover:text-highlight-400 transition-colors text-left">
                                         Envíos y devoluciones
                                     </button>
                                 </li>
                                 <li>
-                                    <button
-                                        onClick={() => setModal('contact')}
-                                        className="hover:text-brand-400 transition-colors text-left"
-                                    >
+                                    <button onClick={() => setModal('contact')}
+                                            className="hover:text-highlight-400 transition-colors text-left">
                                         Contáctanos
                                     </button>
+                                </li>
+                                <li>
+                                    <Link to="/mis-pedidos" className="hover:text-highlight-400 transition-colors block">
+                                        Mis pedidos
+                                    </Link>
                                 </li>
                             </ul>
                         </div>
@@ -401,7 +370,7 @@ export default function Footer() {
                         <div>
                             <h4 className="font-display font-semibold text-white mb-4">Novedades</h4>
                             <p className="text-sm text-gray-400 mb-3">
-                                Recibe las últimas colecciones y ofertas exclusivas.
+                                Recibe ofertas exclusivas y nuevos productos.
                             </p>
                             <div className="flex gap-2">
                                 <input
@@ -409,7 +378,7 @@ export default function Footer() {
                                     placeholder="tu@email.com"
                                     className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-brand-400"
                                 />
-                                <button className="px-4 py-2 bg-brand-400 text-white rounded-xl text-sm font-medium hover:bg-brand-500 transition-colors">
+                                <button className="px-4 py-2 bg-accent-400 text-white rounded-xl text-sm font-medium hover:bg-accent-500 transition-colors">
                                     OK
                                 </button>
                             </div>
@@ -417,7 +386,7 @@ export default function Footer() {
                     </div>
 
                     <div className="mt-10 pt-6 border-t border-gray-800 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-gray-500">
-                        <p>© 2026 VYBE. Todos los derechos reservados.</p>
+                        <p>© 2026 Multi Flash. Todos los derechos reservados.</p>
                         <div className="flex gap-4">
                             <a href="#" className="hover:text-gray-300 transition-colors">Privacidad</a>
                             <a href="#" className="hover:text-gray-300 transition-colors">Términos</a>
@@ -426,10 +395,9 @@ export default function Footer() {
                 </div>
             </footer>
 
-            {/* Modales */}
-            {modal === 'sizes'    && <SizeGuideModal    onClose={() => setModal(null)} />}
-            {modal === 'shipping' && <ShippingModal     onClose={() => setModal(null)} />}
-            {modal === 'contact'  && <ContactModal      onClose={() => setModal(null)} />}
+            {modal === 'warranty' && <WarrantyModal  onClose={() => setModal(null)} />}
+            {modal === 'shipping' && <ShippingModal  onClose={() => setModal(null)} />}
+            {modal === 'contact'  && <ContactModal   onClose={() => setModal(null)} />}
         </>
     )
 }

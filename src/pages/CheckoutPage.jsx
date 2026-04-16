@@ -39,7 +39,7 @@ function Steps({ current }) {
                         }`}>
                             {i < current ? <CheckCircle2 size={16} /> : i + 1}
                         </div>
-                        <span className={`text-xs mt-1 font-medium ${i === current ? 'text-brand-500' : 'text-gray-400'}`}>
+                        <span className={`text-xs mt-1 font-medium ${i === current ? 'text-brand-400' : 'text-gray-400'}`}>
               {label}
             </span>
                     </div>
@@ -65,7 +65,7 @@ function OrderSummary({ items, subtotal, shipping, total, collapsed, onToggle })
           Resumen ({items.length} productos)
         </span>
                 <div className="flex items-center gap-2">
-                    <span className="font-display font-extrabold text-brand-500">${total.toFixed(2)}</span>
+                    <span className="font-display font-extrabold text-brand-400">${total.toFixed(2)}</span>
                     <span className="lg:hidden text-gray-400">
             {collapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
           </span>
@@ -80,7 +80,7 @@ function OrderSummary({ items, subtotal, shipping, total, collapsed, onToggle })
                                 <div className="w-14 h-16 rounded-xl overflow-hidden bg-gray-100">
                                     {item.image
                                         ? <img src={item.image} alt={item.productName} className="w-full h-full object-cover" />
-                                        : <div className="w-full h-full flex items-center justify-center text-xl">👗</div>
+                                        : <div className="w-full h-full flex items-center justify-center text-xl">📦</div>
                                     }
                                 </div>
                                 <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-brand-400 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
@@ -112,7 +112,7 @@ function OrderSummary({ items, subtotal, shipping, total, collapsed, onToggle })
                     </div>
                     <div className="flex justify-between pt-2 border-t border-gray-100">
                         <span className="font-display font-bold text-gray-900">Total</span>
-                        <span className="font-display font-extrabold text-brand-500 text-lg">${total.toFixed(2)}</span>
+                        <span className="font-display font-extrabold text-brand-400 text-lg">${total.toFixed(2)}</span>
                     </div>
                 </div>
             </div>
@@ -382,7 +382,7 @@ export default function CheckoutPage() {
                                     <h3 className="font-display font-bold text-gray-900 flex items-center gap-2">
                                         <MapPin size={16} className="text-brand-400" /> Enviar a
                                     </h3>
-                                    <button onClick={() => setStep(0)} className="text-xs text-brand-500 font-medium">
+                                    <button onClick={() => setStep(0)} className="text-xs text-brand-400 font-medium">
                                         Cambiar
                                     </button>
                                 </div>
