@@ -14,24 +14,35 @@ Deno.serve(async (req) => {
 
     try {
         const { id, clientTxId, kind } = await req.json()
-        // id: id numérico de PayPhone que viene en la URL de retorno
+
+        // ── DEBUG ──
+        const token = Deno.env.get('PAYPHONE_TOKEN')
+        console.log('PAYPHONE_TOKEN exists:', !!token, 'length:', token?.length ?? 0)
+        console.log('Confirm request:', JSON.stringify({ id, clientTxId, kind }))
+
+        if (!token) {
+            return json({ error: 'PAYPHONE_TOKEN not configured in Edge Function secrets' }, 500)
+        }
 
         // 1. Confirmar en PayPhone (servidor -> servidor, token seguro)
         const resp = await fetch(`${PAYPHONE_BASE}/api/button/V2/Confirm`, {
             method: 'POST',
             headers: {
                 'Content-Type':  'application/json',
-                'Authorization': `Bearer ${Deno.env.get('PAYPHONE_TOKEN')}`,
+                'Authorization': `Bearer ${token}`,
             },
             body: JSON.stringify({ id: Number(id), clientTxId }),
         })
 
+        const responseText = await resp.text()
+        console.log('PayPhone confirm status:', resp.status)
+        console.log('PayPhone confirm response:', responseText)
+
         if (!resp.ok) {
-            const text = await resp.text()
-            return json({ error: `PayPhone ${resp.status}: ${text}` }, 502)
+            return json({ error: `PayPhone ${resp.status}: ${responseText}` }, 502)
         }
 
-        const tx = await resp.json()
+        const tx = JSON.parse(responseText)
         const approved = tx.transactionStatus === 'Approved'
 
         // 2. Actualizar DB con service_role (las RLS no pueden bloquearnos)
