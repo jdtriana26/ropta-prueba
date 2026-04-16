@@ -40,8 +40,8 @@ function Steps({ current }) {
                             {i < current ? <CheckCircle2 size={16} /> : i + 1}
                         </div>
                         <span className={`text-xs mt-1 font-medium ${i === current ? 'text-brand-400' : 'text-gray-400'}`}>
-              {label}
-            </span>
+                            {label}
+                        </span>
                     </div>
                     {i < steps.length - 1 && (
                         <div className={`w-16 sm:w-24 h-0.5 mx-2 mb-5 transition-all ${i < current ? 'bg-brand-400' : 'bg-gray-200'}`} />
@@ -60,15 +60,15 @@ function OrderSummary({ items, subtotal, shipping, total, collapsed, onToggle })
                 onClick={onToggle}
                 className="w-full flex items-center justify-between px-6 py-4 border-b border-gray-100"
             >
-        <span className="font-display font-bold text-gray-900 flex items-center gap-2">
-          <ShoppingBag size={16} className="text-brand-400" />
-          Resumen ({items.length} productos)
-        </span>
+                <span className="font-display font-bold text-gray-900 flex items-center gap-2">
+                    <ShoppingBag size={16} className="text-brand-400" />
+                    Resumen ({items.length} productos)
+                </span>
                 <div className="flex items-center gap-2">
                     <span className="font-display font-extrabold text-brand-400">${total.toFixed(2)}</span>
                     <span className="lg:hidden text-gray-400">
-            {collapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
-          </span>
+                        {collapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+                    </span>
                 </div>
             </button>
 
@@ -84,7 +84,7 @@ function OrderSummary({ items, subtotal, shipping, total, collapsed, onToggle })
                                     }
                                 </div>
                                 <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-brand-400 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                                  {item.quantity}
+                                    {item.quantity}
                                 </span>
                             </div>
                             <div className="flex-1 min-w-0">
@@ -95,7 +95,7 @@ function OrderSummary({ items, subtotal, shipping, total, collapsed, onToggle })
                             </div>
                             <span className="text-sm font-semibold text-gray-900 flex-shrink-0">
                                 ${(item.price * item.quantity).toFixed(2)}
-                              </span>
+                            </span>
                         </div>
                     ))}
                 </div>
@@ -107,7 +107,7 @@ function OrderSummary({ items, subtotal, shipping, total, collapsed, onToggle })
                     <div className="flex justify-between text-gray-500">
                         <span>Envío</span>
                         <span className={shipping === 0 ? 'text-green-600 font-medium' : 'text-gray-900 font-medium'}>
-                          {shipping === 0 ? 'Gratis' : `$${shipping.toFixed(2)}`}
+                            {shipping === 0 ? 'Gratis' : `$${shipping.toFixed(2)}`}
                         </span>
                     </div>
                     <div className="flex justify-between pt-2 border-t border-gray-100">
@@ -120,160 +120,152 @@ function OrderSummary({ items, subtotal, shipping, total, collapsed, onToggle })
     )
 }
 
-// Direcciones guardadas
-const { data: savedAddresses = [] } = useQuery({
-    queryKey: ['addresses', user?.id],
-    queryFn: async () => {
-        const { data } = await supabase
-            .from('addresses')
-            .select('*')
-            .eq('user_id', user.id)
-            .order('is_default', { ascending: false })
-        return data ?? []
-    },
-    enabled: !!user,
-})
+// ── Página principal ──────────────────────────────────────────────────────────
+export default function CheckoutPage() {
+    const navigate  = useNavigate()
+    const { user }  = useAuthStore()
+    const items     = useCartStore(s => s.items)
+    const getTotal  = useCartStore(s => s.getTotal)
+    const clearCart = useCartStore(s => s.clearCart)
 
-useEffect(() => {
-    const def = savedAddresses.find(a => a.is_default) ?? savedAddresses[0]
-    if (def && !savedAddressId) {
-        setSavedAddressId(def.id)
-        setAddress({
-            full_name:   def.full_name,
-            street:      def.street,
-            city:        def.city,
-            state:       def.state ?? '',
-            country:     def.country,
-            postal_code: def.postal_code ?? '',
-        })
-    }
-}, [savedAddresses])
+    const [step,           setStep]           = useState(0)
+    const [address,        setAddress]        = useState(EMPTY_ADDRESS)
+    const [savedAddressId, setSavedAddressId] = useState(null)
+    const [saveAddress,    setSaveAddress]    = useState(true)
+    const [paymentMethod,  setPaymentMethod]  = useState('card') // 'card' | 'cash'
+    const [processing,     setProcessing]     = useState(false)
+    const [summaryOpen,    setSummaryOpen]    = useState(false)
 
-const handleSelectSaved = (addr) => {
-    setSavedAddressId(addr.id)
-    setAddress({
-        full_name:   addr.full_name,
-        street:      addr.street,
-        city:        addr.city,
-        state:       addr.state ?? '',
-        country:     addr.country,
-        postal_code: addr.postal_code ?? '',
+    const subtotal = getTotal()
+    const shipping = subtotal >= SHIPPING_THRESHOLD ? 0 : SHIPPING_COST
+    const total    = subtotal + shipping
+
+    useEffect(() => {
+        if (items.length === 0 && step < 2) navigate('/carrito')
+    }, [items])
+
+    // ── Direcciones guardadas del usuario ────────────────────────────────────
+    const { data: savedAddresses = [] } = useQuery({
+        queryKey: ['addresses', user?.id],
+        queryFn: async () => {
+            const { data } = await supabase
+                .from('addresses')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('is_default', { ascending: false })
+            return data ?? []
+        },
+        enabled: !!user,
     })
-}
 
-const validateAddress = () => {
-    const required = ['full_name', 'street', 'city', 'country']
-    for (const field of required) {
-        if (!address[field]?.trim()) {
-            toast.error(`El campo "${field.replace('_', ' ')}" es obligatorio`)
-            return false
+    useEffect(() => {
+        const def = savedAddresses.find(a => a.is_default) ?? savedAddresses[0]
+        if (def && !savedAddressId) {
+            setSavedAddressId(def.id)
+            setAddress({
+                full_name:   def.full_name,
+                street:      def.street,
+                city:        def.city,
+                state:       def.state ?? '',
+                country:     def.country,
+                postal_code: def.postal_code ?? '',
+            })
         }
-    }
-    return true
-}
+    }, [savedAddresses])
 
-// ── Guardar dirección (si el usuario lo pidió) ───────────────────────────
-const ensureAddressSaved = async () => {
-    if (savedAddressId) return savedAddressId
-    if (!saveAddress)   return null
-
-    const { data: newAddr, error } = await supabase
-        .from('addresses')
-        .insert({ ...address, user_id: user.id, is_default: savedAddresses.length === 0 })
-        .select()
-        .single()
-    if (error) throw error
-    return newAddr.id
-}
-
-// ── Procesar pago ─────────────────────────────────────────────────────────
-const handlePay = async () => {
-    setProcessing(true)
-    try {
-        await ensureAddressSaved()
-
-        // Crear orden con stock atómico vía RPC
-        const { data: orderId, error } = await supabase.rpc('create_order', {
-            p_items: items.map(i => ({
-                variant_id: i.variantId,
-                quantity:   i.quantity,
-                unit_price: i.price,
-            })),
-            p_shipping: {
-                full_name:   address.full_name,
-                street:      address.street,
-                city:        address.city,
-                state:       address.state,
-                country:     address.country,
-                postal_code: address.postal_code,
-            },
-            p_subtotal:      subtotal,
-            p_shipping_cost: shipping,
-            p_total:         total,
+    const handleSelectSaved = (addr) => {
+        setSavedAddressId(addr.id)
+        setAddress({
+            full_name:   addr.full_name,
+            street:      addr.street,
+            city:        addr.city,
+            state:       addr.state ?? '',
+            country:     addr.country,
+            postal_code: addr.postal_code ?? '',
         })
+    }
 
-        if (error) {
-            if (error.message.includes('out_of_stock')) {
-                toast.error('Uno de los productos se quedó sin stock. Actualiza el carrito.')
-            } else {
-                toast.error('Error: ' + error.message)
+    const validateAddress = () => {
+        const required = ['full_name', 'street', 'city', 'country']
+        for (const field of required) {
+            if (!address[field]?.trim()) {
+                toast.error(`El campo "${field.replace('_', ' ')}" es obligatorio`)
+                return false
             }
-            setProcessing(false)
-            return
         }
-
-        // Pago contra entrega
-        if (paymentMethod === 'cash') {
-            await supabase.from('orders')
-                .update({ status: 'confirmed', payment_provider: 'cash' })
-                .eq('id', orderId)
-            clearCart()
-            navigate(`/pago/resultado?status=success&orderId=${orderId}`)
-            return
-        }
-
-        // Pago con tarjeta — redirigir a PayPhone
-        sessionStorage.setItem('pendingOrderId', orderId)
-        const tx = await createTransaction({
-            kind:       'order',
-            id:         orderId,
-            returnPath: `${window.location.origin}/pago/resultado`,
-        })
-        if (!tx.payWithCard) throw new Error('No se obtuvo URL de pago')
-        window.location.href = tx.payWithCard
-
-    } catch (err) {
-        toast.error('Error al procesar el pago: ' + err.message)
-        setProcessing(false)
+        return true
     }
-}
+
+    // ── Guardar dirección si el usuario lo pidió ─────────────────────────────
+    const ensureAddressSaved = async () => {
+        if (savedAddressId) return savedAddressId
+        if (!saveAddress)   return null
+
+        const { data: newAddr, error } = await supabase
+            .from('addresses')
+            .insert({ ...address, user_id: user.id, is_default: savedAddresses.length === 0 })
+            .select()
+            .single()
+        if (error) throw error
+        return newAddr.id
+    }
 
     // ── Procesar pago ─────────────────────────────────────────────────────────
     const handlePay = async () => {
         setProcessing(true)
         try {
-            const order = await createPendingOrder()
+            await ensureAddressSaved()
 
-            if (paymentMethod === 'cash') {
-                // Pago contra entrega — confirmar directo
-                await supabase.from('orders').update({ status: 'confirmed' }).eq('id', order.id)
-                for (const item of items) {
-                    await supabase.rpc('decrement_stock', { variant_id: item.variantId, qty: item.quantity })
+            // Crear orden con stock atómico vía RPC
+            const { data: orderId, error } = await supabase.rpc('create_order', {
+                p_items: items.map(i => ({
+                    variant_id: i.variantId,
+                    quantity:   i.quantity,
+                    unit_price: i.price,
+                })),
+                p_shipping: {
+                    full_name:   address.full_name,
+                    street:      address.street,
+                    city:        address.city,
+                    state:       address.state,
+                    country:     address.country,
+                    postal_code: address.postal_code,
+                },
+                p_subtotal:      subtotal,
+                p_shipping_cost: shipping,
+                p_total:         total,
+            })
+
+            if (error) {
+                if (error.message.includes('out_of_stock')) {
+                    toast.error('Uno de los productos se quedó sin stock. Actualiza el carrito.')
+                } else {
+                    toast.error('Error: ' + error.message)
                 }
-                clearCart()
-                navigate(`/pago/resultado?status=success&orderId=${order.id}`)
+                setProcessing(false)
                 return
             }
 
-            // Pago con tarjeta — redirigir a PayPhone
-            // Guardamos el orderId en sessionStorage para recuperarlo al volver
-            sessionStorage.setItem('pendingOrderId', order.id)
-            sessionStorage.setItem('pendingCartItems', JSON.stringify(items))
+            // Pago contra entrega → confirmar directo
+            if (paymentMethod === 'cash') {
+                await supabase.from('orders')
+                    .update({ status: 'confirmed', payment_provider: 'cash' })
+                    .eq('id', orderId)
+                clearCart()
+                navigate(`/pago/resultado?status=success&orderId=${orderId}`)
+                return
+            }
 
-            if (!txData.payWithCard) throw new Error('No se obtuvo URL de pago')
+            // Pago con tarjeta → redirigir a PayPhone
+            sessionStorage.setItem('pendingOrderId', orderId)
 
-            // Redirigir al portal de pago de PayPhone
-            window.location.href = txData.payWithCard
+            const tx = await createTransaction({
+                kind:       'order',
+                id:         orderId,
+                returnPath: `${window.location.origin}/pago/resultado`,
+            })
+            if (!tx.payWithCard) throw new Error('No se obtuvo URL de pago')
+            window.location.href = tx.payWithCard
 
         } catch (err) {
             toast.error('Error al procesar el pago: ' + err.message)
@@ -468,7 +460,7 @@ const handlePay = async () => {
 
                             <p className="text-xs text-center text-gray-400">
                                 Al confirmar aceptas nuestros{' '}
-                                <Link to="#" className="underline">Términos y condiciones</Link>
+                                <Link to="/terminos" className="underline">Términos y condiciones</Link>
                             </p>
                         </div>
                     )}

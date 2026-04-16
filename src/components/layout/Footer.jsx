@@ -95,7 +95,7 @@ function WarrantyModal({ onClose }) {
             content: (
                 <Link to="/terminos" className="block hover:text-brand-400 transition-colors">Términos y condiciones</Link>,
                 <Link to="/privacidad" className="block hover:text-brand-400 transition-colors">Política de privacidad</Link>,
-                <Link to="/devoluciones" className="block hover:text-brand-400 transition-colors">Política de devoluciones</Link>,
+                <Link to="/devoluciones" className="block hover:text-brand-400 transition-colors">Política de devoluciones</Link>
             )
         },
 
