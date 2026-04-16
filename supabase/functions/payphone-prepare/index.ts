@@ -1,7 +1,5 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 
-const PAYPHONE_BASE = 'https://pay.payphonetodoesposible.com'
-
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'authorization, content-type, x-client-info, apikey',
@@ -12,7 +10,6 @@ Deno.serve(async (req) => {
     if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders })
 
     try {
-        // 1. Autenticar usuario
         const authHeader = req.headers.get('Authorization')
         if (!authHeader) return json({ error: 'No auth header' }, 401)
 
@@ -25,10 +22,8 @@ Deno.serve(async (req) => {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return json({ error: 'User not authenticated' }, 401)
 
-        // 2. Leer parámetros
-        const { kind, id, returnPath } = await req.json()
+        const { kind, id } = await req.json()
 
-        // 3. Calcular monto real del lado servidor
         const admin = createClient(
             Deno.env.get('SUPABASE_URL')!,
             Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
@@ -43,7 +38,7 @@ Deno.serve(async (req) => {
                 .select('id, user_id, total, status')
                 .eq('id', id)
                 .single()
-            if (error || !order) return json({ error: `Order not found: ${error?.message}` }, 404)
+            if (error || !order) return json({ error: `Order not found` }, 404)
             if (order.user_id !== user.id) return json({ error: 'Forbidden' }, 403)
             if (order.status !== 'pending') return json({ error: `Invalid state: ${order.status}` }, 400)
             amountCents = Math.round(Number(order.total) * 100)
@@ -67,48 +62,13 @@ Deno.serve(async (req) => {
             return json({ error: `Invalid kind: ${kind}` }, 400)
         }
 
-        // 4. Construir body para PayPhone
-        const payphoneBody = {
-            amount:              amountCents,
-            amountWithTax:       0,
-            amountWithoutTax:    amountCents,
-            tax: 0, service: 0, tip: 0,
-            currency:            'USD',
-            storeId:             Deno.env.get('PAYPHONE_APP_ID'),
-            clientTransactionId: id,
-            responseUrl:         `${returnPath}?kind=${kind}`,
-            cancellationUrl:     `${returnPath.replace('/resultado', '/cancelado')}?kind=${kind}`,
+        // Devolver datos verificados — el CLIENTE llama a PayPhone
+        return json({
+            amountCents,
+            orderId: id,
             reference,
-        }
-
-        // 5. Llamar a PayPhone
-        const bodyString = JSON.stringify(payphoneBody)
-        const bodyBytes  = new TextEncoder().encode(bodyString)
-
-        const resp = await fetch(`${PAYPHONE_BASE}/api/button/Prepare`, {
-            method: 'POST',
-            headers: {
-                'Content-Type':   'application/json',
-                'Content-Length': String(bodyBytes.length),
-                'Accept':         'application/json',
-                'User-Agent':     'MultiFlash/1.0',
-                'Authorization':  `Bearer ${Deno.env.get('PAYPHONE_TOKEN')}`,
-            },
-            body: bodyBytes,
+            kind,
         })
-
-        const responseText = await resp.text()
-
-        if (!resp.ok) {
-            return json({
-                error: `PayPhone ${resp.status}`,
-                sentToPayphone: payphoneBody,
-                payphoneResponse: responseText.slice(0, 200),
-            }, 502)
-        }
-
-        const data = JSON.parse(responseText)
-        return json({ payWithCard: data.payWithCard })
 
     } catch (err) {
         return json({ error: `Server error: ${err.message}` }, 500)
