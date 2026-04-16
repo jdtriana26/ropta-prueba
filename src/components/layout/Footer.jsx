@@ -93,11 +93,9 @@ function WarrantyModal({ onClose }) {
             key: 'legal',
             title: 'Informacion extra',
             content: (
-                <div className="text-sm text-gray-600 space-y-2">
-                    <Link to="/terminos"     className="...">Términos y condiciones</Link>
-                    <Link to="/privacidad"   className="...">Política de privacidad</Link>
-                    <Link to="/devoluciones" className="...">Política de devoluciones</Link>
-                </div>
+                <Link to="/terminos" className="block hover:text-brand-400 transition-colors">Términos y condiciones</Link>,
+                <Link to="/privacidad" className="block hover:text-brand-400 transition-colors">Política de privacidad</Link>,
+                <Link to="/devoluciones" className="block hover:text-brand-400 transition-colors">Política de devoluciones</Link>,
             )
         },
 

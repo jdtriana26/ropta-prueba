@@ -10,6 +10,7 @@ import toast from 'react-hot-toast'
 import { useCartStore } from '../store/useCartStore'
 import { useAuthStore } from '../store/useAuthStore'
 import { supabase } from '../lib/supabase'
+import { createTransaction } from '../lib/payphone'
 
 const SHIPPING_THRESHOLD = 50
 const SHIPPING_COST      = 5.99
@@ -119,156 +120,133 @@ function OrderSummary({ items, subtotal, shipping, total, collapsed, onToggle })
     )
 }
 
-export async function createTransaction({ kind, id, returnPath }) {
-    const { data, error } = await supabase.functions.invoke('payphone-prepare', {
-        body: { kind, id, returnPath },
-    })
-    if (error) throw new Error(error.message)
-    if (data?.error) throw new Error(data.error)
-    return data   // { payWithCard }
-}
+// Direcciones guardadas
+const { data: savedAddresses = [] } = useQuery({
+    queryKey: ['addresses', user?.id],
+    queryFn: async () => {
+        const { data } = await supabase
+            .from('addresses')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('is_default', { ascending: false })
+        return data ?? []
+    },
+    enabled: !!user,
+})
 
-export async function confirmTransaction({ id, clientTxId, kind }) {
-    const { data, error } = await supabase.functions.invoke('payphone-confirm', {
-        body: { id, clientTxId, kind },
-    })
-    if (error) throw new Error(error.message)
-    if (data?.error) throw new Error(data.error)
-    return data   // { approved, status }
-}
-
-// ── Página principal ──────────────────────────────────────────────────────────
-export default function CheckoutPage() {
-    const navigate  = useNavigate()
-    const { user }  = useAuthStore()
-    const items     = useCartStore(s => s.items)
-    const getTotal  = useCartStore(s => s.getTotal)
-    const clearCart = useCartStore(s => s.clearCart)
-
-    const [step,            setStep]            = useState(0)
-    const [address,         setAddress]         = useState(EMPTY_ADDRESS)
-    const [savedAddressId,  setSavedAddressId]  = useState(null)
-    const [saveAddress,     setSaveAddress]     = useState(true)
-    const [paymentMethod,   setPaymentMethod]   = useState('card') // 'card' | 'cash'
-    const [processing,      setProcessing]      = useState(false)
-    const [summaryOpen,     setSummaryOpen]     = useState(false)
-
-    const subtotal = getTotal()
-    const shipping = subtotal >= SHIPPING_THRESHOLD ? 0 : SHIPPING_COST
-    const total    = subtotal + shipping
-
-    useEffect(() => {
-        if (items.length === 0 && step < 2) navigate('/carrito')
-    }, [items])
-
-    // Direcciones guardadas
-    const { data: orderId, error } = await supabase.rpc('create_order', {
-        p_items: items.map(i => ({
-            variant_id: i.variantId,
-            quantity:   i.quantity,
-            unit_price: i.price,
-        })),
-        p_shipping: { address, city, phone, notes },
-        p_subtotal: subtotal,
-        p_shipping_cost: shippingCost,
-        p_total: total,
-    })
-
-    if (error) {
-        if (error.message.includes('out_of_stock')) {
-            toast.error('Uno de los productos se quedó sin stock. Actualiza el carrito.')
-        } else {
-            toast.error('Error: ' + error.message)
-        }
-        return
-    }
-
-// orderId ahora es el UUID nuevo
-    const tx = await createTransaction({
-        kind: 'order',
-        id: orderId,
-        returnPath: `${window.location.origin}/pago/resultado`,
-    })
-    window.location.href = tx.payWithCard
-
-    useEffect(() => {
-        const def = savedAddresses.find(a => a.is_default) ?? savedAddresses[0]
-        if (def && !savedAddressId) {
-            setSavedAddressId(def.id)
-            setAddress({
-                full_name:   def.full_name,
-                street:      def.street,
-                city:        def.city,
-                state:       def.state ?? '',
-                country:     def.country,
-                postal_code: def.postal_code ?? '',
-            })
-        }
-    }, [savedAddresses])
-
-    const handleSelectSaved = (addr) => {
-        setSavedAddressId(addr.id)
+useEffect(() => {
+    const def = savedAddresses.find(a => a.is_default) ?? savedAddresses[0]
+    if (def && !savedAddressId) {
+        setSavedAddressId(def.id)
         setAddress({
-            full_name:   addr.full_name,
-            street:      addr.street,
-            city:        addr.city,
-            state:       addr.state ?? '',
-            country:     addr.country,
-            postal_code: addr.postal_code ?? '',
+            full_name:   def.full_name,
+            street:      def.street,
+            city:        def.city,
+            state:       def.state ?? '',
+            country:     def.country,
+            postal_code: def.postal_code ?? '',
         })
     }
+}, [savedAddresses])
 
-    const validateAddress = () => {
-        const required = ['full_name', 'street', 'city', 'country']
-        for (const field of required) {
-            if (!address[field]?.trim()) {
-                toast.error(`El campo "${field.replace('_', ' ')}" es obligatorio`)
-                return false
+const handleSelectSaved = (addr) => {
+    setSavedAddressId(addr.id)
+    setAddress({
+        full_name:   addr.full_name,
+        street:      addr.street,
+        city:        addr.city,
+        state:       addr.state ?? '',
+        country:     addr.country,
+        postal_code: addr.postal_code ?? '',
+    })
+}
+
+const validateAddress = () => {
+    const required = ['full_name', 'street', 'city', 'country']
+    for (const field of required) {
+        if (!address[field]?.trim()) {
+            toast.error(`El campo "${field.replace('_', ' ')}" es obligatorio`)
+            return false
+        }
+    }
+    return true
+}
+
+// ── Guardar dirección (si el usuario lo pidió) ───────────────────────────
+const ensureAddressSaved = async () => {
+    if (savedAddressId) return savedAddressId
+    if (!saveAddress)   return null
+
+    const { data: newAddr, error } = await supabase
+        .from('addresses')
+        .insert({ ...address, user_id: user.id, is_default: savedAddresses.length === 0 })
+        .select()
+        .single()
+    if (error) throw error
+    return newAddr.id
+}
+
+// ── Procesar pago ─────────────────────────────────────────────────────────
+const handlePay = async () => {
+    setProcessing(true)
+    try {
+        await ensureAddressSaved()
+
+        // Crear orden con stock atómico vía RPC
+        const { data: orderId, error } = await supabase.rpc('create_order', {
+            p_items: items.map(i => ({
+                variant_id: i.variantId,
+                quantity:   i.quantity,
+                unit_price: i.price,
+            })),
+            p_shipping: {
+                full_name:   address.full_name,
+                street:      address.street,
+                city:        address.city,
+                state:       address.state,
+                country:     address.country,
+                postal_code: address.postal_code,
+            },
+            p_subtotal:      subtotal,
+            p_shipping_cost: shipping,
+            p_total:         total,
+        })
+
+        if (error) {
+            if (error.message.includes('out_of_stock')) {
+                toast.error('Uno de los productos se quedó sin stock. Actualiza el carrito.')
+            } else {
+                toast.error('Error: ' + error.message)
             }
-        }
-        return true
-    }
-
-    // ── Crear orden pendiente en Supabase ─────────────────────────────────────
-    const createPendingOrder = async () => {
-        let addressId = savedAddressId
-
-        if (!savedAddressId || saveAddress) {
-            const { data: newAddr, error } = await supabase
-                .from('addresses')
-                .insert({ ...address, user_id: user.id, is_default: savedAddresses.length === 0 })
-                .select()
-                .single()
-            if (error) throw error
-            addressId = newAddr.id
+            setProcessing(false)
+            return
         }
 
-        const { data: order, error: orderError } = await supabase
-            .from('orders')
-            .insert({
-                user_id:    user.id,
-                address_id: addressId,
-                status:     'pending',
-                total,
-            })
-            .select()
-            .single()
-        if (orderError) throw orderError
+        // Pago contra entrega
+        if (paymentMethod === 'cash') {
+            await supabase.from('orders')
+                .update({ status: 'confirmed', payment_provider: 'cash' })
+                .eq('id', orderId)
+            clearCart()
+            navigate(`/pago/resultado?status=success&orderId=${orderId}`)
+            return
+        }
 
-        const { error: itemsError } = await supabase
-            .from('order_items')
-            .insert(
-                items.map(item => ({
-                    order_id:   order.id,
-                    variant_id: item.variantId,
-                    quantity:   item.quantity,
-                    unit_price: item.price,
-                }))
-            )
-        if (itemsError) throw itemsError
+        // Pago con tarjeta — redirigir a PayPhone
+        sessionStorage.setItem('pendingOrderId', orderId)
+        const tx = await createTransaction({
+            kind:       'order',
+            id:         orderId,
+            returnPath: `${window.location.origin}/pago/resultado`,
+        })
+        if (!tx.payWithCard) throw new Error('No se obtuvo URL de pago')
+        window.location.href = tx.payWithCard
 
-        return order
+    } catch (err) {
+        toast.error('Error al procesar el pago: ' + err.message)
+        setProcessing(false)
     }
+}
 
     // ── Procesar pago ─────────────────────────────────────────────────────────
     const handlePay = async () => {
