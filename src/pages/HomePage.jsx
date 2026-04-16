@@ -4,67 +4,45 @@ import { ArrowRight, Truck, Shield, RotateCcw, BadgeCheck } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 
-
 const PERKS = [
-    { icon: Truck,       title: 'Envío gratis',       desc: 'En compras mayores a $50' },
+    { icon: Truck,       title: 'Envío gratis',        desc: 'En compras mayores a $50' },
     { icon: BadgeCheck,  title: '6 meses de garantía', desc: 'En todos los productos' },
     { icon: Shield,      title: 'Pago seguro',         desc: '100% protegido' },
     { icon: RotateCcw,   title: 'Devoluciones fáciles', desc: 'Hasta 30 días después' },
 ]
 
-const { data: categories = [] } = useQuery({
-    queryKey: ['home-categories'],
-    queryFn: async () => {
-        const { data } = await supabase
-            .from('categories')
-            .select('id, name, slug, image_url')
-            .eq('is_active', true)
-            .order('display_order', { ascending: true })
-            .order('name')
-        return data ?? []
-    },
-    staleTime: 1000 * 60 * 5,
-})
-
 function ProductCard({ product }) {
-    const image      = product.product_images?.[0]?.url
+    const image       = product.product_images?.[0]?.url
     const hasDiscount = product.compare_at_price && product.compare_at_price > product.price
 
     return (
         <Link to={`/producto/${product.slug}`} className="group card block">
             <div className="relative aspect-square bg-gray-100 overflow-hidden rounded-t-2xl">
                 {image ? (
-                    <img
-                        src={image}
-                        alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
+                    <img src={image} alt={product.name}
+                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gray-50">
                         <span className="text-gray-300 text-5xl">📦</span>
                     </div>
                 )}
                 {hasDiscount && (
-                    <span className="absolute top-3 left-3 badge bg-accent-400 text-white font-semibold">
-            Oferta
-          </span>
+                    <span className="absolute top-3 left-3 badge bg-accent-400 text-white font-semibold">Oferta</span>
                 )}
             </div>
             <div className="p-4">
-                <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">
-                    {product.categories?.name}
-                </p>
+                <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">{product.categories?.name}</p>
                 <h3 className="font-display font-semibold text-gray-900 group-hover:text-brand-400 transition-colors line-clamp-1">
                     {product.name}
                 </h3>
                 <div className="flex items-center gap-2 mt-2">
-          <span className="font-display font-bold text-brand-400 text-lg">
-            ${Number(product.price).toFixed(2)}
-          </span>
+                    <span className="font-display font-bold text-brand-400 text-lg">
+                        ${Number(product.price).toFixed(2)}
+                    </span>
                     {hasDiscount && (
                         <span className="text-sm text-gray-400 line-through">
-              ${Number(product.compare_at_price).toFixed(2)}
-            </span>
+                            ${Number(product.compare_at_price).toFixed(2)}
+                        </span>
                     )}
                 </div>
             </div>
@@ -86,16 +64,32 @@ function ProductCardSkeleton() {
 }
 
 export default function HomePage() {
+    // ── Categorías dinámicas desde Supabase ──
+    const { data: categories = [] } = useQuery({
+        queryKey: ['home-categories'],
+        queryFn: async () => {
+            const { data } = await supabase
+                .from('categories')
+                .select('id, name, slug, image_url')
+                .eq('is_active', true)
+                .order('display_order', { ascending: true })
+                .order('name')
+            return data ?? []
+        },
+        staleTime: 1000 * 60 * 5,
+    })
+
+    // ── Productos destacados ──
     const { data: products, isLoading } = useQuery({
         queryKey: ['featured-products'],
         queryFn: async () => {
             const { data, error } = await supabase
                 .from('products')
                 .select(`
-          *,
-          categories(name),
-          product_images(url, is_primary, position)
-        `)
+                    *,
+                    categories(name),
+                    product_images(url, is_primary, position)
+                `)
                 .eq('is_active', true)
                 .order('created_at', { ascending: false })
                 .limit(8)
@@ -118,7 +112,7 @@ export default function HomePage() {
                 <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="max-w-xl">
                         <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-highlight-400/20 border border-highlight-400/50 rounded-full text-highlight-400 text-xs font-semibold mb-6 backdrop-blur-sm">
-                          ⚡ Quito · Guayaquil · El Quinche
+                            ⚡ Quito · Guayaquil · El Quinche
                         </span>
                         <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-extrabold text-white leading-tight">
                             Todo lo que<br />
@@ -166,26 +160,32 @@ export default function HomePage() {
                         Ver todo <ArrowRight size={14} />
                     </Link>
                 </div>
-                <div>
-                {categories.map(cat => (
-                    <Link key={cat.id} to={`/catalogo/${cat.slug}`}
-                          className="group relative aspect-video rounded-2xl overflow-hidden bg-gray-100">
-                        {cat.image_url ? (
-                            <img src={cat.image_url} alt={cat.name}
-                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                        ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-brand-400 to-brand-600" />
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                        <div className="absolute bottom-0 left-0 right-0 p-6">
-                            <h3 className="font-display text-2xl font-bold text-white">{cat.name}</h3>
-                            <span className="inline-flex items-center gap-1 text-sm text-white/80 mt-1 group-hover:gap-2 transition-all">
-                                Ver productos <ArrowRight size={12} />
-                              </span>
-                        </div>
-                    </Link>
-                ))}
-                </div>
+                {categories.length === 0 ? (
+                    <p className="text-center text-gray-400 py-12">
+                        Aún no hay categorías. Crea una desde el panel admin.
+                    </p>
+                ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {categories.map(cat => (
+                            <Link key={cat.id} to={`/catalogo/${cat.slug}`}
+                                  className="group relative aspect-video rounded-2xl overflow-hidden bg-gray-100">
+                                {cat.image_url ? (
+                                    <img src={cat.image_url} alt={cat.name}
+                                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                ) : (
+                                    <div className="w-full h-full bg-gradient-to-br from-brand-400 to-brand-600" />
+                                )}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                                <div className="absolute bottom-0 left-0 right-0 p-6">
+                                    <h3 className="font-display text-2xl font-bold text-white">{cat.name}</h3>
+                                    <span className="inline-flex items-center gap-1 text-sm text-white/80 mt-1 group-hover:gap-2 transition-all">
+                                        Ver productos <ArrowRight size={12} />
+                                    </span>
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+                )}
             </section>
 
             {/* ── PRODUCTOS DESTACADOS ── */}

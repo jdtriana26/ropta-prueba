@@ -89,6 +89,18 @@ function WarrantyModal({ onClose }) {
                 </div>
             )
         },
+        {
+            key: 'legal',
+            title: 'Informacion extra',
+            content: (
+                <div className="text-sm text-gray-600 space-y-2">
+                    <Link to="/terminos"     className="...">Términos y condiciones</Link>
+                    <Link to="/privacidad"   className="...">Política de privacidad</Link>
+                    <Link to="/devoluciones" className="...">Política de devoluciones</Link>
+                </div>
+            )
+        },
+
     ]
 
     return (

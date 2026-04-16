@@ -1,9 +1,10 @@
 // src/pages/admin/AdminCategories.jsx
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ImagePlus, Pencil, Trash2, X, Loader2, FolderOpen } from 'lucide-react'
+import { ImagePlus, Plus, Pencil, Trash2, X, Loader2, FolderOpen } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { supabase } from '../../lib/supabase'
+import imageCompression from 'browser-image-compression'
 
 function CategoryModal({ category, onClose }) {
   const qc = useQueryClient()
@@ -150,6 +151,133 @@ function CategoryModal({ category, onClose }) {
             </button>
           </div>
         </div>
+      </div>
+  )
+}
+export default function AdminCategories() {
+  const qc = useQueryClient()
+  const [modal, setModal] = useState(null)
+
+  const { data: categories = [], isLoading } = useQuery({
+    queryKey: ['admin-categories'],
+    queryFn: async () => {
+      const { data } = await supabase
+          .from('categories')
+          .select('*, products(id)')
+          .order('display_order', { ascending: true })
+          .order('name')
+      return data
+    },
+  })
+
+  const deleteCategory = useMutation({
+    mutationFn: async (id) => {
+      const { error } = await supabase.from('categories').delete().eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      toast.success('Categoría eliminada')
+      qc.invalidateQueries({ queryKey: ['admin-categories'] })
+      qc.invalidateQueries({ queryKey: ['categories-nav'] })
+      qc.invalidateQueries({ queryKey: ['home-categories'] })
+    },
+    onError: (e) => toast.error(e.message),
+  })
+
+  const toggleActive = async (cat) => {
+    await supabase.from('categories').update({ is_active: !cat.is_active }).eq('id', cat.id)
+    qc.invalidateQueries({ queryKey: ['admin-categories'] })
+    qc.invalidateQueries({ queryKey: ['categories-nav'] })
+    qc.invalidateQueries({ queryKey: ['home-categories'] })
+  }
+
+  return (
+      <div className="p-8">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="font-display text-3xl font-extrabold text-gray-900">Categorías</h1>
+            <p className="text-gray-400 text-sm mt-1">
+              Cada categoría tiene imagen, orden de visualización y slug único
+            </p>
+          </div>
+          <button onClick={() => setModal('new')} className="btn-primary flex items-center gap-2">
+            <Plus size={16} /> Nueva categoría
+          </button>
+        </div>
+
+        {isLoading ? (
+            <div className="flex justify-center py-20">
+              <Loader2 size={32} className="animate-spin text-brand-400" />
+            </div>
+        ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {categories.map(cat => (
+                  <div key={cat.id} className="bg-white rounded-2xl shadow-sm overflow-hidden flex flex-col">
+                    {/* Thumbnail */}
+                    <div className="aspect-video bg-gray-100 relative">
+                      {cat.image_url ? (
+                          <img src={cat.image_url} alt={cat.name} className="w-full h-full object-cover" />
+                      ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-300">
+                            <FolderOpen size={32} />
+                          </div>
+                      )}
+                      <span className={`absolute top-2 right-2 badge ${
+                          cat.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'
+                      }`}>
+                                    {cat.is_active ? 'Activa' : 'Oculta'}
+                                </span>
+                    </div>
+
+                    <div className="p-5 flex-1 flex flex-col gap-3">
+                      <div>
+                        <h3 className="font-display font-bold text-gray-900">{cat.name}</h3>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <FolderOpen size={12} className="text-brand-400" />
+                          <span className="text-xs text-gray-400">/{cat.slug}/</span>
+                        </div>
+                      </div>
+
+                      <p className="text-sm text-gray-400">
+                        {cat.products?.length ?? 0} producto(s) · orden {cat.display_order ?? 0}
+                      </p>
+
+                      <div className="flex items-center gap-2 pt-2 border-t border-gray-100 mt-auto">
+                        <button
+                            onClick={() => toggleActive(cat)}
+                            className="flex-1 text-xs text-center py-1.5 rounded-lg border border-gray-200 text-gray-500 hover:border-brand-300 hover:text-brand-400 transition-colors"
+                        >
+                          {cat.is_active ? 'Ocultar' : 'Activar'}
+                        </button>
+                        <button
+                            onClick={() => setModal(cat)}
+                            className="p-2 rounded-lg hover:bg-brand-50 hover:text-brand-400 transition-colors"
+                        >
+                          <Pencil size={15} />
+                        </button>
+                        <button
+                            onClick={() => {
+                              if (window.confirm(`¿Eliminar "${cat.name}"?`)) {
+                                deleteCategory.mutate(cat.id)
+                              }
+                            }}
+                            className="p-2 rounded-lg hover:bg-red-50 hover:text-red-500 transition-colors"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+              ))}
+            </div>
+        )}
+
+        {modal && (
+            <CategoryModal
+                category={modal === 'new' ? null : modal}
+                onClose={() => setModal(null)}
+            />
+        )}
       </div>
   )
 }

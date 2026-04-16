@@ -14,8 +14,12 @@ import CartPage from './pages/CartPage'
 import CheckoutPage from './pages/CheckoutPage'
 import OrdersPage from './pages/OrdersPage'
 import AccountPage from './pages/AccountPage'
-import MembershipPage from './pages/MembershipPage'
 import PaymentResultPage from './pages/PaymentResultPage'
+import { Analytics } from '@vercel/analytics/react'
+import { SpeedInsights } from '@vercel/speed-insights/react'
+import TermsPage    from './pages/legal/TermsPage'
+import PrivacyPage  from './pages/legal/PrivacyPage'
+import ReturnsPage  from './pages/legal/ReturnsPage'
 
 const queryClient = new QueryClient()
 
@@ -26,6 +30,8 @@ export default function App() {
           <Toaster position="top-right" toastOptions={{
             style: { borderRadius: '12px', fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '14px' },
           }} />
+          <Analytics />
+          <SpeedInsights />
           <Routes>
             <Route path="/" element={<Layout />}>
               {/* Públicas */}
@@ -36,9 +42,11 @@ export default function App() {
               <Route path="catalogo/:category" element={<CatalogPage />} />
               <Route path="producto/:slug" element={<ProductPage />} />
               <Route path="carrito" element={<CartPage />} />
-              <Route path="membresia" element={<MembershipPage />} />
               <Route path="pago/resultado" element={<PaymentResultPage />} />
               <Route path="pago/cancelado" element={<PaymentResultPage />} />
+              <Route path="terminos"     element={<TermsPage />} />
+              <Route path="privacidad"   element={<PrivacyPage />} />
+              <Route path="devoluciones" element={<ReturnsPage />} />
 
               {/* Requieren login */}
               <Route element={<ProtectedRoute />}>

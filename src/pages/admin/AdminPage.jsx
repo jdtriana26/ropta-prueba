@@ -71,8 +71,8 @@ export default function AdminPage() {
             <Route path="productos"  element={<AdminProducts />} />
             <Route path="categorias" element={<AdminCategories />} />
             <Route path="pedidos"    element={<AdminOrders />} />
-            <Route path="*"          element={<Navigate to="/admin" replace />} />
             <Route path="usuarios" element={<AdminUsers />} />
+            <Route path="*"          element={<Navigate to="/admin" replace />} />
           </Routes>
         </main>
       </div>

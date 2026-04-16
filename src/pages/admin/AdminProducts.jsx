@@ -4,6 +4,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus, Pencil, Trash2, X, Upload, Loader2, ImagePlus } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { supabase } from '../../lib/supabase'
+import imageCompression from 'browser-image-compression'
+
 
 const SIZES   = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
 const COLORS   = ['Negro', 'Blanco', 'Gris', 'Azul', 'Rojo', 'Verde', 'Amarillo', 'Rosa', 'Beige', 'Café']
@@ -11,21 +13,21 @@ const EMPTY_VARIANT = { size: 'M', color: 'Negro', sku: '', stock: 0 }
 
 // ── Subir imagen a Supabase Storage en carpeta de categoría ──────────────────
 async function uploadImage(file, categorySlug) {
-  const ext      = file.name.split('.').pop()
-  const fileName = `${categorySlug}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-  const { data: { session } } = await supabase.auth.getSession()
-  console.log('Sesión activa:', session?.user?.email ?? 'SIN SESIÓN')
+  // Comprimir antes de subir
+  const compressed = await imageCompression(file, {
+    maxSizeMB:      0.5,
+    maxWidthOrHeight: 1600,
+    useWebWorker:   true,
+    fileType:       'image/webp',
+  })
 
+  const fileName = `${categorySlug}/${Date.now()}-${Math.random().toString(36).slice(2)}.webp`
   const { error } = await supabase.storage
       .from('product-images')
-      .upload(fileName, file, { cacheControl: '3600', upsert: false })
-
+      .upload(fileName, compressed, { cacheControl: '3600', upsert: false })
   if (error) throw error
 
-  const { data } = supabase.storage
-      .from('product-images')
-      .getPublicUrl(fileName)
-
+  const { data } = supabase.storage.from('product-images').getPublicUrl(fileName)
   return data.publicUrl
 }
 

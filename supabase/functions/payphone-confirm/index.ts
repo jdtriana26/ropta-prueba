@@ -41,25 +41,17 @@ Deno.serve(async (req) => {
         )
 
         if (kind === 'order') {
-            await admin
-                .from('orders')
-                .update({
-                    status:            approved ? 'paid' : 'cancelled',
-                    payment_provider:  'payphone',
-                    payment_ref:       String(id),
-                    paid_at:           approved ? new Date().toISOString() : null,
-                })
-                .eq('id', clientTxId)
+            await admin.from('orders').update({
+                status:           approved ? 'paid' : 'cancelled',
+                payment_provider: 'payphone',
+                payment_ref:      String(id),
+                paid_at:          approved ? new Date().toISOString() : null,
+            }).eq('id', clientTxId)
 
-        } else if (kind === 'membership') {
-            await admin
-                .from('memberships')
-                .update({
-                    status:            approved ? 'active'     : 'cancelled',
-                    payment_provider:  'payphone',
-                    payment_ref:       String(id),
-                })
-                .eq('id', clientTxId)
+            // 🆕 Si no se aprobó, devuelve el stock
+            if (!approved) {
+                await admin.rpc('restore_stock', { p_order_id: clientTxId })
+            }
         }
 
         return json({ approved, status: tx.transactionStatus })

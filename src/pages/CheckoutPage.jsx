@@ -7,11 +7,9 @@ import {
     MapPin, CreditCard, ShoppingBag, Banknote
 } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { supabase } from '../lib/supabase'
-import { createTransaction } from '../lib/payphone'
 import { useCartStore } from '../store/useCartStore'
 import { useAuthStore } from '../store/useAuthStore'
-import { supabase } from './supabase'
+import { supabase } from '../lib/supabase'
 
 const SHIPPING_THRESHOLD = 50
 const SHIPPING_COST      = 5.99
@@ -85,8 +83,8 @@ function OrderSummary({ items, subtotal, shipping, total, collapsed, onToggle })
                                     }
                                 </div>
                                 <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-brand-400 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                  {item.quantity}
-                </span>
+                                  {item.quantity}
+                                </span>
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm font-medium text-gray-900 line-clamp-1">{item.productName}</p>
@@ -95,8 +93,8 @@ function OrderSummary({ items, subtotal, shipping, total, collapsed, onToggle })
                                 </p>
                             </div>
                             <span className="text-sm font-semibold text-gray-900 flex-shrink-0">
-                ${(item.price * item.quantity).toFixed(2)}
-              </span>
+                                ${(item.price * item.quantity).toFixed(2)}
+                              </span>
                         </div>
                     ))}
                 </div>
@@ -108,8 +106,8 @@ function OrderSummary({ items, subtotal, shipping, total, collapsed, onToggle })
                     <div className="flex justify-between text-gray-500">
                         <span>Envío</span>
                         <span className={shipping === 0 ? 'text-green-600 font-medium' : 'text-gray-900 font-medium'}>
-              {shipping === 0 ? 'Gratis' : `$${shipping.toFixed(2)}`}
-            </span>
+                          {shipping === 0 ? 'Gratis' : `$${shipping.toFixed(2)}`}
+                        </span>
                     </div>
                     <div className="flex justify-between pt-2 border-t border-gray-100">
                         <span className="font-display font-bold text-gray-900">Total</span>
@@ -164,18 +162,34 @@ export default function CheckoutPage() {
     }, [items])
 
     // Direcciones guardadas
-    const { data: savedAddresses = [] } = useQuery({
-        queryKey: ['addresses', user?.id],
-        queryFn: async () => {
-            const { data } = await supabase
-                .from('addresses')
-                .select('*')
-                .eq('user_id', user.id)
-                .order('is_default', { ascending: false })
-            return data
-        },
-        enabled: !!user,
+    const { data: orderId, error } = await supabase.rpc('create_order', {
+        p_items: items.map(i => ({
+            variant_id: i.variantId,
+            quantity:   i.quantity,
+            unit_price: i.price,
+        })),
+        p_shipping: { address, city, phone, notes },
+        p_subtotal: subtotal,
+        p_shipping_cost: shippingCost,
+        p_total: total,
     })
+
+    if (error) {
+        if (error.message.includes('out_of_stock')) {
+            toast.error('Uno de los productos se quedó sin stock. Actualiza el carrito.')
+        } else {
+            toast.error('Error: ' + error.message)
+        }
+        return
+    }
+
+// orderId ahora es el UUID nuevo
+    const tx = await createTransaction({
+        kind: 'order',
+        id: orderId,
+        returnPath: `${window.location.origin}/pago/resultado`,
+    })
+    window.location.href = tx.payWithCard
 
     useEffect(() => {
         const def = savedAddresses.find(a => a.is_default) ?? savedAddresses[0]
@@ -277,12 +291,6 @@ export default function CheckoutPage() {
             // Guardamos el orderId en sessionStorage para recuperarlo al volver
             sessionStorage.setItem('pendingOrderId', order.id)
             sessionStorage.setItem('pendingCartItems', JSON.stringify(items))
-
-            const txData = await createTransaction({
-                kind:       'order',
-                id:         newOrder.id,
-                returnPath: `${window.location.origin}/pago/resultado`,
-            })
 
             if (!txData.payWithCard) throw new Error('No se obtuvo URL de pago')
 
