@@ -82,15 +82,19 @@ Deno.serve(async (req) => {
         }
 
         // 5. Llamar a PayPhone
+        const bodyString = JSON.stringify(payphoneBody)
+        const bodyBytes  = new TextEncoder().encode(bodyString)
+
         const resp = await fetch(`${PAYPHONE_BASE}/api/button/Prepare`, {
             method: 'POST',
             headers: {
-                'Content-Type':  'application/json',
-                'Accept':        'application/json',
-                'User-Agent':    'MultiFlash/1.0',
-                'Authorization': `Bearer ${Deno.env.get('PAYPHONE_TOKEN')}`,
+                'Content-Type':   'application/json',
+                'Content-Length': String(bodyBytes.length),
+                'Accept':         'application/json',
+                'User-Agent':     'MultiFlash/1.0',
+                'Authorization':  `Bearer ${Deno.env.get('PAYPHONE_TOKEN')}`,
             },
-            body: JSON.stringify(payphoneBody),
+            body: bodyBytes,
         })
 
         const responseText = await resp.text()
