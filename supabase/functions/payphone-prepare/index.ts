@@ -94,7 +94,11 @@ Deno.serve(async (req) => {
 
         if (!resp.ok) {
             const text = await resp.text()
-            return json({ error: `PayPhone ${resp.status}: ${text}` }, 502)
+            return json({
+                error: `PayPhone ${resp.status}`,
+                sentToPayphone: payphoneBody,
+                payphoneResponse: text.slice(0, 200),
+            }, 502)
         }
 
         const data = await resp.json()
