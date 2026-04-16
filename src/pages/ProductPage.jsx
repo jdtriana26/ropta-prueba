@@ -79,11 +79,27 @@ function ImageGallery({ images, productName }) {
 
 // ── Selector de variantes (talla/color) ──────────────────────────────────────
 function VariantSelector({ variants, selectedSize, selectedColor, onSelectSize, onSelectColor }) {
-    // Extraer sizes y colors únicos
     const sizes  = useMemo(() => [...new Set(variants.map(v => v.size).filter(Boolean))],  [variants])
     const colors = useMemo(() => [...new Set(variants.map(v => v.color).filter(Boolean))], [variants])
 
-    // ¿Una combinación size+color está disponible?
+    // Auto-detectar labels según el contenido
+    const sizeLabel = useMemo(() => {
+        if (sizes.length === 0) return ''
+        // Si todos parecen tallas de ropa
+        if (sizes.every(s => ['XS','S','M','L','XL','XXL','2XL','3XL'].includes(s))) return 'Talla'
+        // Si tienen unidades de medida
+        if (sizes.some(s => /\d+(ml|l|g|kg|oz|cm|mm)/i.test(s))) return 'Presentación'
+        return 'Opción'
+    }, [sizes])
+
+    const colorLabel = useMemo(() => {
+        if (colors.length === 0) return ''
+        const commonColors = ['negro','blanco','gris','azul','rojo','verde','amarillo','rosa','beige','café','dorado','plateado']
+        if (colors.every(c => commonColors.includes(c.toLowerCase()))) return 'Color'
+        if (colors.some(c => /\d+v/i.test(c))) return 'Voltaje'
+        return 'Modelo'
+    }, [colors])
+
     const isAvailable = (size, color) =>
         variants.some(v =>
             (!size  || v.size  === size) &&
@@ -93,10 +109,39 @@ function VariantSelector({ variants, selectedSize, selectedColor, onSelectSize, 
 
     return (
         <div className="space-y-4">
+            {sizes.length > 0 && (
+                <div>
+                    <p className="text-sm font-medium text-gray-700 mb-2">
+                        {sizeLabel}: <span className="text-gray-900 font-semibold">{selectedSize ?? '—'}</span>
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                        {sizes.map(size => {
+                            const available = isAvailable(size, selectedColor)
+                            return (
+                                <button
+                                    key={size}
+                                    onClick={() => onSelectSize(size)}
+                                    disabled={!available}
+                                    className={`px-4 py-2 rounded-xl border text-sm font-medium transition-all ${
+                                        selectedSize === size
+                                            ? 'border-brand-400 bg-brand-50 text-brand-500'
+                                            : available
+                                                ? 'border-gray-200 text-gray-700 hover:border-brand-300'
+                                                : 'border-gray-100 text-gray-300 line-through cursor-not-allowed'
+                                    }`}
+                                >
+                                    {size}
+                                </button>
+                            )
+                        })}
+                    </div>
+                </div>
+            )}
+
             {colors.length > 0 && (
                 <div>
                     <p className="text-sm font-medium text-gray-700 mb-2">
-                        Color: <span className="text-gray-900 font-semibold">{selectedColor ?? '—'}</span>
+                        {colorLabel}: <span className="text-gray-900 font-semibold">{selectedColor ?? '—'}</span>
                     </p>
                     <div className="flex flex-wrap gap-2">
                         {colors.map(color => {
@@ -115,35 +160,6 @@ function VariantSelector({ variants, selectedSize, selectedColor, onSelectSize, 
                                     }`}
                                 >
                                     {color}
-                                </button>
-                            )
-                        })}
-                    </div>
-                </div>
-            )}
-
-            {sizes.length > 0 && (
-                <div>
-                    <p className="text-sm font-medium text-gray-700 mb-2">
-                        Talla: <span className="text-gray-900 font-semibold">{selectedSize ?? '—'}</span>
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                        {sizes.map(size => {
-                            const available = isAvailable(size, selectedColor)
-                            return (
-                                <button
-                                    key={size}
-                                    onClick={() => onSelectSize(size)}
-                                    disabled={!available}
-                                    className={`min-w-12 px-3 py-2 rounded-xl border text-sm font-medium transition-all ${
-                                        selectedSize === size
-                                            ? 'border-brand-400 bg-brand-50 text-brand-500'
-                                            : available
-                                                ? 'border-gray-200 text-gray-700 hover:border-brand-300'
-                                                : 'border-gray-100 text-gray-300 line-through cursor-not-allowed'
-                                    }`}
-                                >
-                                    {size}
                                 </button>
                             )
                         })}

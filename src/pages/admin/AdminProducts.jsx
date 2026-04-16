@@ -6,10 +6,7 @@ import toast from 'react-hot-toast'
 import { supabase } from '../../lib/supabase'
 import imageCompression from 'browser-image-compression'
 
-
-const SIZES   = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
-const COLORS   = ['Negro', 'Blanco', 'Gris', 'Azul', 'Rojo', 'Verde', 'Amarillo', 'Rosa', 'Beige', 'Café']
-const EMPTY_VARIANT = { size: 'M', color: 'Negro', sku: '', stock: 0 }
+const EMPTY_VARIANT = { size: '', color: '', sku: '', stock: 0 }
 
 // ── Subir imagen a Supabase Storage en carpeta de categoría ──────────────────
 async function uploadImage(file, categorySlug) {
@@ -299,53 +296,117 @@ function ProductModal({ product, categories, onClose }) {
             </div>
 
             {/* Variantes */}
+            {/* ── Variantes ── */}
             <div>
               <div className="flex items-center justify-between mb-3">
-                <label className="text-sm font-medium text-gray-700">Variantes (talla / color / stock)</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  Variantes
+                  <span className="text-xs text-gray-400 ml-2 font-normal">
+                (usa Opción 1 para tamaño/presentación, Opción 2 para color/modelo)
+            </span>
+                </label>
                 <button
-                    onClick={addVariant}
-                    className="flex items-center gap-1 text-xs font-medium text-brand-400 hover:text-brand-400"
+                    type="button"
+                    onClick={() => setVariants(v => [...v, { ...EMPTY_VARIANT }])}
+                    className="text-xs text-brand-400 font-medium hover:text-brand-500 flex items-center gap-1"
                 >
-                  <Plus size={14} /> Añadir variante
+                  <Plus size={12} /> Agregar variante
                 </button>
               </div>
-              <div className="space-y-2">
+
+              {variants.length === 0 && (
+                  <button
+                      type="button"
+                      onClick={() => setVariants([{ ...EMPTY_VARIANT }])}
+                      className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-sm text-gray-400 hover:border-brand-300 hover:text-brand-400 transition-colors"
+                  >
+                    + Agregar al menos una variante (necesaria para stock)
+                  </button>
+              )}
+
+              <div className="space-y-3">
                 {variants.map((v, i) => (
-                    <div key={i} className="grid grid-cols-12 gap-2 items-center">
-                      <select
-                          className="input col-span-3 py-2 text-sm"
-                          value={v.size}
-                          onChange={e => updateVariant(i, 'size', e.target.value)}
-                      >
-                        {SIZES.map(s => <option key={s}>{s}</option>)}
-                      </select>
-                      <select
-                          className="input col-span-3 py-2 text-sm"
-                          value={v.color}
-                          onChange={e => updateVariant(i, 'color', e.target.value)}
-                      >
-                        {COLORS.map(c => <option key={c}>{c}</option>)}
-                      </select>
-                      <input
-                          className="input col-span-3 py-2 text-sm"
-                          placeholder="SKU"
-                          value={v.sku}
-                          onChange={e => updateVariant(i, 'sku', e.target.value)}
-                      />
-                      <input
-                          type="number" min="0"
-                          className="input col-span-2 py-2 text-sm"
-                          placeholder="Stock"
-                          value={v.stock}
-                          onChange={e => updateVariant(i, 'stock', e.target.value)}
-                      />
-                      <button
-                          onClick={() => removeVariant(i)}
-                          disabled={variants.length === 1}
-                          className="col-span-1 flex justify-center text-gray-300 hover:text-red-400 disabled:opacity-20 transition-colors"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                    <div key={i} className="bg-gray-50 rounded-xl p-4">
+                      <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs font-semibold text-gray-500">
+                        Variante {i + 1}
+                      {!v.size && !v.color && ' (principal)'}
+                    </span>
+                        {variants.length > 1 && (
+                            <button
+                                type="button"
+                                onClick={() => setVariants(vars => vars.filter((_, j) => j !== i))}
+                                className="text-xs text-red-400 hover:text-red-500"
+                            >
+                              Eliminar
+                            </button>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">
+                            Opción 1
+                            <span className="text-gray-300 ml-1">(ej: 500ml, Grande)</span>
+                          </label>
+                          <input
+                              className="input text-sm"
+                              value={v.size}
+                              onChange={e => {
+                                const val = e.target.value
+                                setVariants(vars => vars.map((vr, j) =>
+                                    j === i ? { ...vr, size: val } : vr
+                                ))
+                              }}
+                              placeholder="Opcional"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">
+                            Opción 2
+                            <span className="text-gray-300 ml-1">(ej: Blanco, 110V)</span>
+                          </label>
+                          <input
+                              className="input text-sm"
+                              value={v.color}
+                              onChange={e => {
+                                const val = e.target.value
+                                setVariants(vars => vars.map((vr, j) =>
+                                    j === i ? { ...vr, color: val } : vr
+                                ))
+                              }}
+                              placeholder="Opcional"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">SKU</label>
+                          <input
+                              className="input text-sm"
+                              value={v.sku}
+                              onChange={e => {
+                                const val = e.target.value
+                                setVariants(vars => vars.map((vr, j) =>
+                                    j === i ? { ...vr, sku: val } : vr
+                                ))
+                              }}
+                              placeholder="Opcional"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">Stock *</label>
+                          <input
+                              type="number"
+                              min="0"
+                              className="input text-sm"
+                              value={v.stock}
+                              onChange={e => {
+                                const val = Number(e.target.value)
+                                setVariants(vars => vars.map((vr, j) =>
+                                    j === i ? { ...vr, stock: val } : vr
+                                ))
+                              }}
+                          />
+                        </div>
+                      </div>
                     </div>
                 ))}
               </div>
