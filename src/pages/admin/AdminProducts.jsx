@@ -397,11 +397,16 @@ export default function AdminProducts() {
   const deleteProduct = useMutation({
     mutationFn: async (id) => {
       const { error } = await supabase.from('products').delete().eq('id', id)
-      if (error) throw error
+      if (error) {
+        if (error.code === '23503') {
+          throw new Error('No se puede eliminar: este producto tiene pedidos asociados. Desactívalo en su lugar.')
+        }
+        throw error
+      }
     },
     onSuccess: () => {
       toast.success('Producto eliminado')
-      qc.invalidateQueries(['admin-products'])
+      qc.invalidateQueries({ queryKey: ['admin-products'] })
     },
     onError: (e) => toast.error(e.message),
   })
